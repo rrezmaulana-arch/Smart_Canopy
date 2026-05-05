@@ -1,0 +1,196 @@
+/* --- Counter Component --- */
+.counter {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  color: var(--neon-pink);
+  background: rgba(255, 47, 176, 0.05); /* Menggunakan alpha dari neon pink */
+  border: 1px solid rgba(255, 47, 176, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: none !important; /* Paksa custom cursor */
+
+  &:hover {
+    border-color: var(--neon-pink);
+    background: rgba(255, 47, 176, 0.1);
+    box-shadow: 0 0 15px rgba(255, 47, 176, 0.2);
+    transform: translateY(-1px);
+  }
+  
+  &:focus-visible {
+    outline: 2px solid var(--neon-pink);
+    outline-offset: 4px;
+  }
+}
+
+/* --- Hero Section (Efek 3D / Isometric) --- */
+.hero {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0;
+
+  .base,
+  .framework,
+  .vite {
+    inset-inline: 0;
+    margin: 0 auto;
+    filter: drop-shadow(0 0 20px rgba(255, 47, 176, 0.1));
+    transition: transform 0.5s ease;
+  }
+
+  .base {
+    width: 180px;
+    position: relative;
+    z-index: 0;
+    opacity: 0.8;
+  }
+
+  .framework,
+  .vite {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .framework {
+    z-index: 2;
+    top: 30px;
+    height: 35px;
+    /* Efek melayang 3D */
+    transform: perspective(1000px) rotateX(15deg) rotateY(-15deg) scale(1.2);
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .vite {
+    z-index: 1;
+    top: 110px;
+    height: 30px;
+    width: auto;
+    transform: perspective(1000px) rotateX(15deg) rotateY(-15deg) scale(0.9);
+    opacity: 0.6;
+  }
+}
+
+/* --- Layout Grid Center --- */
+#center {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+  text-align: center;
+
+  @media (max-width: 1024px) {
+    padding: 40px 24px;
+    gap: 20px;
+  }
+}
+
+/* --- Next Steps Section --- */
+#next-steps {
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
+
+  & > div {
+    flex: 1 1 0;
+    padding: 40px;
+    transition: background 0.3s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    @media (max-width: 1024px) {
+      padding: 30px 24px;
+    }
+  }
+
+  .icon {
+    margin-bottom: 20px;
+    width: 24px;
+    height: 24px;
+    color: var(--neon-pink);
+    filter: drop-shadow(0 0 8px rgba(255, 47, 176, 0.5));
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+  }
+}
+
+#docs {
+  border-right: 1px solid var(--border);
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/* --- Social / Documentation Links --- */
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 12px;
+  margin: 32px 0 0;
+
+  a {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: none !important;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: var(--neon-pink);
+      color: var(--text-h);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* --- Decorative Ticks --- */
+.ticks {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--border);
+    transform: rotate(45deg);
+    background: var(--bg);
+  }
+
+  &::before { left: -4px; }
+  &::after { right: -4px; }
+}
+
+/* --- Keyframe Animations --- */
+@keyframes float {
+  0%, 100% { transform: perspective(1000px) rotateX(15deg) rotateY(-15deg) scale(1.2) translateY(0); }
+  50% { transform: perspective(1000px) rotateX(15deg) rotateY(-15deg) scale(1.2) translateY(-10px); }
+}

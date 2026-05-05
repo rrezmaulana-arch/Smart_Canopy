@@ -1,0 +1,44 @@
+{
+  "rules": {
+    
+    "Data_Historis": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "intensitas": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "Suhu": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    
+    "status": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "mode": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    
+    "position": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "threshold": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    "lastConnected": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
