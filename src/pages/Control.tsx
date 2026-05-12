@@ -96,12 +96,14 @@ export default function Control() {
 
   const saveToHistory = (actionLabel: string, changedData: any) => {
     const historyRef = ref(database, '/Data_Historis');
+    // Struktur history baru - nested per sensor & kanopi
     const logData = {
-      intensitas: dbData.intensitas,
-      cahaya: dbData.cahaya,
-      status: dbData.status,
-      mode: localMode,
-      threshold: localThreshold,
+      sensors: {
+        hujan: { intensitas: dbData.intensitas, isRaining: dbData.intensitas > 0 },
+        cahaya: { lux: dbData.cahaya },
+      },
+      canopy: { status: dbData.status, position: localPosition },
+      settings: { mode: localMode, threshold: localThreshold },
       ...changedData,
       trigger: actionLabel,
       timestamp: serverTimestamp()
@@ -112,8 +114,9 @@ export default function Control() {
   const toggleMode = () => {
     const newMode = localMode === 'AUTO' ? 'MANUAL' : 'AUTO';
     setLocalMode(newMode);
-    update(ref(database, '/'), { mode: newMode })
-      .then(() => saveToHistory(`Ubah Mode ke ${newMode}`, { mode: newMode }));
+    // ✅ Path baru: /settings/mode
+    update(ref(database, '/settings'), { mode: newMode })
+      .then(() => saveToHistory(`Ubah Mode ke ${newMode}`, { settings: { mode: newMode } }));
   };
 
   const handleManualAction = (newStatus: 'OPEN' | 'CLOSED') => {
@@ -121,15 +124,14 @@ export default function Control() {
     setLocalPosition(newPos);
     setLocalMode('MANUAL');
 
-    update(ref(database, '/'), {
-      status: newStatus,
-      position: newPos,
-      mode: 'MANUAL'
-    }).then(() => {
+    // ✅ Path baru: /canopy/ & /settings/
+    Promise.all([
+      update(ref(database, '/canopy'),   { status: newStatus, position: newPos }),
+      update(ref(database, '/settings'), { mode: 'MANUAL' }),
+    ]).then(() => {
       saveToHistory(`Manual Command: ${newStatus}`, {
-        status: newStatus,
-        position: newPos,
-        mode: 'MANUAL'
+        canopy: { status: newStatus, position: newPos },
+        settings: { mode: 'MANUAL' },
       });
     });
   };
@@ -146,19 +148,18 @@ export default function Control() {
     const val = Number((e.target as HTMLInputElement).value);
     const newStatus = val === 0 ? 'CLOSED' : val === 100 ? 'OPEN' : 'PARTIAL';
 
-    setLocalMode('MANUAL'); // Paksa mode manual jika slider digerakkan
+    setLocalMode('MANUAL');
 
-    update(ref(database, '/'), {
-      position: val,
-      mode: 'MANUAL',
-      status: newStatus
-    }).then(() => {
+    // ✅ Path baru: /canopy/ & /settings/
+    Promise.all([
+      update(ref(database, '/canopy'),   { position: val, status: newStatus }),
+      update(ref(database, '/settings'), { mode: 'MANUAL' }),
+    ]).then(() => {
       saveToHistory(`Manual Slider: ${val}%`, {
-        position: val,
-        mode: 'MANUAL',
-        status: newStatus
+        canopy: { position: val, status: newStatus },
+        settings: { mode: 'MANUAL' },
       });
-      isDraggingRef.current = false; // Lepaskan tanda drag setelah selesai update
+      isDraggingRef.current = false;
     });
   };
 
@@ -168,10 +169,11 @@ export default function Control() {
   };
 
   const handleThresholdRelease = () => {
-    update(ref(database, '/'), { threshold: localThreshold })
+    // ✅ Path baru: /settings/threshold
+    update(ref(database, '/settings'), { threshold: localThreshold })
       .then(() => {
-        saveToHistory(`Ubah Threshold (${localThreshold}%)`, { threshold: localThreshold });
-        isDraggingRef.current = false; // Lepaskan tanda drag
+        saveToHistory(`Ubah Threshold (${localThreshold}%)`, { settings: { threshold: localThreshold } });
+        isDraggingRef.current = false;
       });
   };
 

@@ -1,16 +1,26 @@
+// 📁 src/contexts/FirebaseContext.tsx
+// Mendukung struktur database baru:
+//   /sensors/hujan/   → sensor hujan
+//   /sensors/cahaya/  → sensor LDR
+//   /canopy/          → status & posisi
+//   /settings/        → mode & threshold
+//   /system/          → heartbeat ESP32
+
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import { ref, onValue, off, query, limitToLast, orderByChild } from 'firebase/database';
+import { ref, onValue, off, query, limitToLast } from 'firebase/database';
 import { database } from '../services/firebaseConfig';
 import { TelemetryData, HistoryLog, FirebaseContextState } from '../types';
 
 const defaultTelemetry: TelemetryData = {
-  Suhu: 0,
+  isRaining: false,
   intensitas: 0,
   cahaya: 0,
+  cahayaRaw: 0,
   status: 'UNKNOWN',
-  mode: 'AUTO',
   position: 0,
-  threshold: 30,
+  mode: 'AUTO',
+  threshold: 65,
+  lastConnected: 0,
 };
 
 const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
@@ -20,106 +30,191 @@ export const FirebaseDataProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [historyLogs, setHistoryLogs] = useState<HistoryLog[]>([]);
   const [isBrowserConnected, setIsBrowserConnected] = useState(false);
   const [isHardwareOnline, setIsHardwareOnline] = useState(false);
-  
-  // Timer for heartbeat monitoring
+
   const heartbeatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // 1. Connection Listener (Browser API -> Firebase)
+    // ─── 1. Cek koneksi browser ke Firebase ───────────────────────────────
     const connectedRef = ref(database, '.info/connected');
     const connListener = onValue(connectedRef, (snap) => {
       setIsBrowserConnected(snap.val() === true);
     });
 
-    // 2. Realtime Telemetry Monitor (Optimized for Flat DB)
-    // 💥 PERBAIKAN KRITIS: JANGAN mendengarkan root '/' karena akan menarik seluruh database
-    // termasuk '/Data_Historis' yang bisa sangat besar setiap detiknya, menyebabkan LAG EKSTREM.
-    const keys = ['intensitas', 'status', 'Suhu', 'mode', 'threshold', 'position', 'lastConnected', 'cahaya'];
-    const listeners: ReturnType<typeof onValue>[] = [];
-    
-    keys.forEach(key => {
-      const fieldRef = ref(database, `/${key}`);
-      const listener = onValue(fieldRef, (snapshot) => {
-        const val = snapshot.exists() ? snapshot.val() : undefined;
-        
-        setTelemetry(prev => {
-          // Hanya render ulang komponen jika nilai benar-benar berubah (Deep Mencegah Lag)
-          if (prev[key as keyof TelemetryData] === val) return prev;
-          
-          return { ...prev, [key]: val ?? defaultTelemetry[key as keyof TelemetryData] };
-        });
+    // ─── 2. Listener per field sensor (struktur baru) ─────────────────────
+    // Kita listen ke masing-masing node, lalu flat-kan ke TelemetryData.
+    //
+    // Mapping:
+    //   /sensors/hujan/isRaining  → telemetry.isRaining
+    //   /sensors/hujan/intensitas → telemetry.intensitas
+    //   /sensors/cahaya/lux       → telemetry.cahaya
+    //   /sensors/cahaya/raw       → telemetry.cahayaRaw
+    //   /canopy/status            → telemetry.status
+    //   /canopy/position          → telemetry.position
+    //   /settings/mode            → telemetry.mode
+    //   /settings/threshold       → telemetry.threshold
+    //   /system/lastConnected     → telemetry.lastConnected
 
-        if (key === 'lastConnected') {
-          const hwTimeMs = Number(val || 0);
-          const alive = (Date.now() - hwTimeMs) < 60000;
-          setIsHardwareOnline(alive);
+    const fieldListeners: Array<() => void> = [];
 
-          if (heartbeatTimerRef.current) clearTimeout(heartbeatTimerRef.current);
-          heartbeatTimerRef.current = setTimeout(() => {
-             setIsHardwareOnline(false);
-          }, 65000);
-        }
-      }, (error) => console.error(`Firebase error on ${key}:`, error));
-      
-      listeners.push(listener);
+    const watchField = (
+      path: string,
+      onData: (val: any) => void
+    ) => {
+      const fieldRef = ref(database, path);
+      const unsub = onValue(
+        fieldRef,
+        (snap) => onData(snap.exists() ? snap.val() : null),
+        (err) => console.error(`[Firebase] Error on ${path}:`, err)
+      );
+      fieldListeners.push(() => off(fieldRef, 'value', unsub));
+    };
+
+    // /sensors/hujan/
+    watchField('/sensors/hujan/isRaining', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => prev.isRaining === val ? prev : { ...prev, isRaining: Boolean(val) });
+    });
+    watchField('/sensors/hujan/intensitas', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => prev.intensitas === val ? prev : { ...prev, intensitas: Number(val) });
+    });
+    watchField('/sensors/hujan/lastUpdated', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => ({ ...prev, hujanLastUpdated: Number(val) }));
     });
 
-    // 3. Independent History Logs listener for the latest 100 entries (protecting RAM bandwidth)
+    // /sensors/cahaya/
+    watchField('/sensors/cahaya/lux', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => prev.cahaya === val ? prev : { ...prev, cahaya: Number(val) });
+    });
+    watchField('/sensors/cahaya/raw', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => ({ ...prev, cahayaRaw: Number(val) }));
+    });
+    watchField('/sensors/cahaya/lastUpdated', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => ({ ...prev, cahayaLastUpdated: Number(val) }));
+    });
+
+    // /canopy/
+    watchField('/canopy/status', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => prev.status === val ? prev : { ...prev, status: String(val) });
+    });
+    watchField('/canopy/position', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => prev.position === val ? prev : { ...prev, position: Number(val) });
+    });
+
+    // /settings/
+    watchField('/settings/mode', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => prev.mode === val ? prev : { ...prev, mode: val as 'AUTO' | 'MANUAL' });
+    });
+    watchField('/settings/threshold', (val) => {
+      if (val === null) return;
+      setTelemetry(prev => prev.threshold === val ? prev : { ...prev, threshold: Number(val) });
+    });
+
+    // /system/lastConnected  (heartbeat ESP32)
+    watchField('/system/lastConnected', (val) => {
+      if (val === null) return;
+      const hwTimeMs = Number(val);
+      setTelemetry(prev => ({ ...prev, lastConnected: hwTimeMs }));
+
+      const alive = (Date.now() - hwTimeMs) < 60000;
+      setIsHardwareOnline(alive);
+
+      if (heartbeatTimerRef.current) clearTimeout(heartbeatTimerRef.current);
+      heartbeatTimerRef.current = setTimeout(() => {
+        setIsHardwareOnline(false);
+      }, 65000);
+    });
+
+    // ─── 3. History Logs (100 terbaru) ────────────────────────────────────
     const historyRef = query(ref(database, '/Data_Historis'), limitToLast(100));
-    const historyListener = onValue(historyRef, (snapshot) => {
-       if (snapshot.exists()) {
-          const rawHistory = snapshot.val();
-          const logsArray = Object.keys(rawHistory).map((key) => {
-            const item = rawHistory[key];
-            const ts = item.timestamp ? new Date(item.timestamp) : new Date();
-            
-            let type: HistoryLog['type'] = 'info';
-            if (item.status === 'CLOSED') type = 'warning';
-            if (item.status === 'OPEN') type = 'success';
-            if ((item.intensitas || 0) > 80) type = 'critical';
+    const historyUnsub = onValue(historyRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        setHistoryLogs([]);
+        return;
+      }
 
-            return {
-               id: key,
-               type: type,
-               title: item.title || item.trigger || 'System Action',
-               message: item.message || `Status: ${item.status || '-'} | Position: ${item.position || 0}%`,
-               time: ts.toLocaleTimeString('en-GB'),
-               date: ts.toISOString().split('T')[0],
-               isRead: item.isRead || false,
-               status: item.status || '',
-               intensitas: item.intensitas || 0,
-               cahaya: item.cahaya || 0,
-               position: item.position || 0,
-               timestamp: item.timestamp || Date.now(),
-            } as HistoryLog;
-          });
-          setHistoryLogs(logsArray.reverse());
-       } else {
-          setHistoryLogs([]);
-       }
+      const rawHistory = snapshot.val();
+      const logsArray: HistoryLog[] = Object.keys(rawHistory).map((key) => {
+        const item = rawHistory[key];
+        const ts = item.timestamp ? new Date(item.timestamp) : new Date();
+
+        // Dukung struktur baru (nested) & lama (flat)
+        const intensitas =
+          item.sensors?.hujan?.intensitas ??
+          item.intensitas ??
+          0;
+        const cahaya =
+          item.sensors?.cahaya?.lux ??
+          item.cahaya ??
+          0;
+        const status =
+          item.canopy?.status ??
+          item.status ??
+          '';
+        const position =
+          item.canopy?.position ??
+          item.position ??
+          0;
+        const mode =
+          item.settings?.mode ??
+          item.mode ??
+          'AUTO';
+        const threshold =
+          item.settings?.threshold ??
+          item.threshold ??
+          65;
+        const trigger = item.trigger || item.title || 'System Action';
+        const isRaining = item.sensors?.hujan?.isRaining ?? (intensitas > 0);
+
+        let type: HistoryLog['type'] = 'info';
+        if (intensitas > 80)        type = 'critical';
+        else if (status === 'CLOSED') type = 'warning';
+        else if (status === 'OPEN')   type = 'success';
+
+        return {
+          id: key,
+          type,
+          title: trigger,
+          message: `Status: ${status} | Position: ${position}%`,
+          time: ts.toLocaleTimeString('id-ID', { hour12: false }),
+          date: ts.toISOString().split('T')[0],
+          isRead: item.isRead || false,
+          timestamp: item.timestamp || Date.now(),
+          intensitas,
+          cahaya,
+          isRaining,
+          status,
+          position,
+          mode,
+          threshold,
+          trigger,
+        } as HistoryLog;
+      });
+
+      setHistoryLogs(logsArray.reverse()); // terbaru di atas
     });
 
+    // ─── Cleanup ──────────────────────────────────────────────────────────
     return () => {
       off(connectedRef, 'value', connListener);
-      off(historyRef, 'value', historyListener);
-      
-      // Matikan semua listener untuk setiap key agar tidak terjadi memory leak
-      keys.forEach((key, index) => {
-        const fieldRef = ref(database, `/${key}`);
-        off(fieldRef, 'value', listeners[index]);
-      });
-      
+      off(historyRef,   'value', historyUnsub);
+      fieldListeners.forEach((unsub) => unsub());
       if (heartbeatTimerRef.current) clearTimeout(heartbeatTimerRef.current);
     };
   }, []);
 
-  const combinedConnection = isBrowserConnected;
-
   return (
-    <FirebaseContext.Provider value={{ 
-      telemetry, 
-      historyLogs, 
-      isConnected: combinedConnection, 
+    <FirebaseContext.Provider value={{
+      telemetry,
+      historyLogs,
+      isConnected: isBrowserConnected,
       isBrowserConnected,
       isHardwareOnline,
     }}>

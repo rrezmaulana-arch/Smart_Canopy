@@ -9,10 +9,10 @@ const token = process.env.TELEGRAM_BOT_TOKEN;
 
 // ✨ Konfigurasi Firebase Anda
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: "smartcanopy-57d8a.firebaseapp.com",
-  projectId: "smartcanopy-57d8a",
-  databaseURL: "https://smartcanopy-57d8a-default-rtdb.firebaseio.com" 
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  databaseURL: process.env.VITE_FIREBASE_DATABASE_URL
 };
 
 // Inisialisasi Firebase App

@@ -135,7 +135,9 @@ const WeatherReport = ({ isDark }: { isDark: boolean }) => {
   const [weather, setWeather] = useState<any>(null);
 
   useEffect(() => {
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=-7.9553&longitude=112.6125&current=temperature_2m,wind_speed_10m,weather_code,relative_humidity_2m&timezone=Asia%2FJakarta')
+    const url = `${import.meta.env.VITE_WEATHER_API_URL}?latitude=${import.meta.env.VITE_LATITUDE}&longitude=${import.meta.env.VITE_LONGITUDE}&current=temperature_2m,wind_speed_10m,weather_code,relative_humidity_2m&timezone=Asia%2FJakarta`;
+    
+    fetch(url)
       .then(res => res.json())
       .then(data => setWeather(data.current))
       .catch(err => console.error(err));

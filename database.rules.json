@@ -1,44 +1,41 @@
 {
   "rules": {
     
+    // ─── Sensor Nodes (ESP32 menulis, Web membaca) ────────────
+    "sensors": {
+      "hujan": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "cahaya": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    },
+
+    // ─── Kanopi (ESP32 & Web keduanya baca/tulis) ─────────────
+    "canopy": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    // ─── Pengaturan (Web menulis, ESP32 membaca) ──────────────
+    "settings": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    // ─── Heartbeat (ESP32 menulis tanpa auth via setTimestamp) ─
+    "system": {
+      ".read": true,
+      ".write": true
+    },
+
+    // ─── Riwayat Data ─────────────────────────────────────────
     "Data_Historis": {
       ".read": true,
       ".write": "auth != null"
-    },
-
-    "intensitas": {
-      ".read": true,
-      ".write": "auth != null"
-    },
-
-    "Suhu": {
-      ".read": true,
-      ".write": "auth != null"
-    },
-    
-    "status": {
-      ".read": true,
-      ".write": "auth != null"
-    },
-
-    "mode": {
-      ".read": true,
-      ".write": "auth != null"
-    },
-    
-    "position": {
-      ".read": true,
-      ".write": "auth != null"
-    },
-
-    "threshold": {
-      ".read": true,
-      ".write": "auth != null"
-    },
-
-    "lastConnected": {
-      ".read": true,
-      ".write": true
     }
+
   }
 }

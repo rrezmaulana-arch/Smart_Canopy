@@ -4,14 +4,14 @@ import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth"; // ✨ Tambahkan ini untuk keamanan
 
 const firebaseConfig = {
-  apiKey: "AIzaSyChn7VdSPluklKEiNaHCY4chWSwjm4iNGw",
-  authDomain: "smartcanopy-57d8a.firebaseapp.com",
-  projectId: "smartcanopy-57d8a",
-  storageBucket: "smartcanopy-57d8a.firebasestorage.app",
-  messagingSenderId: "1004945227100",
-  appId: "1:1004945227100:web:7b1ca799e42b023d9dd599",
-  measurementId: "G-QMGNTDBYQJ",
-  databaseURL: "https://smartcanopy-57d8a-default-rtdb.firebaseio.com" 
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
 };
 
 // Inisialisasi Firebase
