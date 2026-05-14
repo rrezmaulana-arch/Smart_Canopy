@@ -1,40 +1,35 @@
 {
   "rules": {
-    
-    // ─── Sensor Nodes (ESP32 menulis, Web membaca) ────────────
+
     "sensors": {
       "hujan": {
         ".read": true,
-        ".write": "auth != null"
+        ".write": true
       },
       "cahaya": {
         ".read": true,
-        ".write": "auth != null"
+        ".write": true
       }
     },
 
-    // ─── Kanopi (ESP32 & Web keduanya baca/tulis) ─────────────
     "canopy": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
 
-    // ─── Pengaturan (Web menulis, ESP32 membaca) ──────────────
     "settings": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
 
-    // ─── Heartbeat (ESP32 menulis tanpa auth via setTimestamp) ─
     "system": {
       ".read": true,
       ".write": true
     },
 
-    // ─── Riwayat Data ─────────────────────────────────────────
     "Data_Historis": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     }
 
   }

@@ -160,7 +160,7 @@ function startSimulator() {
         : "Periodic Log";
 
       await push(ref(db, "Data_Historis"), {
-        // Struktur baru (nested)
+        // Struktur baru (nested) agar sinkron dengan web
         sensors: {
           hujan:  { isRaining, intensitas },
           cahaya: { lux: cahaya, raw: ldrRaw },
@@ -174,7 +174,7 @@ function startSimulator() {
           threshold: state.threshold,
         },
         trigger,
-        timestamp: serverTimestamp(),
+        timestamp: Date.now(),  // ✅ Pakai client timestamp, bukan server timestamp
       });
 
       console.log(`💾 [HISTORY] ${trigger}`);
