@@ -413,7 +413,7 @@ export default function Monitoring() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <MonitoringStatCard isDark={isDark} label="Total Records" val={historyList.length} icon={Activity} color="text-pink-500" glowColor="rgba(236,72,153,0.15)" dot="bg-pink-500" />
         <MonitoringStatCard isDark={isDark} label="Light Intensity" val={`${telemetry.cahaya || 0} Lux`} icon={Sun} color="text-amber-500" glowColor="rgba(245,158,11,0.15)" dot="bg-amber-500" />
-        <MonitoringStatCard isDark={isDark} label="Rain Intensity" val={`${telemetry.intensitas || 0}%`} icon={Waves} color="text-blue-500" glowColor="rgba(59,130,246,0.15)" dot="bg-blue-500" />
+        <MonitoringStatCard isDark={isDark} label="Status Hujan" val={telemetry.isRaining ? "Hujan" : "Cerah"} icon={Waves} color="text-blue-500" glowColor="rgba(59,130,246,0.15)" dot="bg-blue-500" />
         <MonitoringStatCard isDark={isDark} label="System Status" val={isConnected ? "Active" : "Offline"} icon={ShieldCheck} color={isConnected ? "text-emerald-500" : "text-rose-500"} glowColor="rgba(16,185,129,0.15)" dot={isConnected ? "bg-emerald-500" : "bg-rose-500"} />
       </div>
 

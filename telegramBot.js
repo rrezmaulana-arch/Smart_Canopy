@@ -69,23 +69,31 @@ setTimeout(() => isInitialLoad = false, 3000);
 // Helper untuk mencatat Log ke Riwayat Web & Monitoring saat Telegram memberikan aksi
 const letakDataRiwayat = async (actionText) => {
   try {
-    const dbRefs = ['cahaya', 'intensitas', 'status', 'position'];
-    const data = {};
-    for (const key of dbRefs) {
-      const snap = await get(ref(database, `/${key}`));
-      data[key] = snap.exists() ? snap.val() : 0;
-    }
-    
+    const [snapHujan, snapCahaya, snapCanopy, snapSettings] = await Promise.all([
+      get(ref(database, '/sensors/hujan')),
+      get(ref(database, '/sensors/cahaya')),
+      get(ref(database, '/canopy')),
+      get(ref(database, '/settings'))
+    ]);
+
+    const hujanVal = snapHujan.val() || { intensitas: 0, isRaining: false };
+    const cahayaVal = snapCahaya.val() || { lux: 0, raw: 0 };
+    const canopyVal = snapCanopy.val() || { status: 'OPEN', position: 100 };
+    const settingsVal = snapSettings.val() || { mode: 'AUTO', threshold: 50 };
+
     push(ref(database, 'Data_Historis'), {
-      cahaya: data.cahaya || 0,
-      intensitas: data.intensitas || 0,
-      isRead: false,
+      sensors: {
+        hujan: hujanVal,
+        cahaya: cahayaVal
+      },
+      canopy: canopyVal,
+      settings: settingsVal,
+      trigger: actionText,
       message: `Admin mengontrol melalui Telegram Bot: ${actionText}`,
-      position: data.position || 0,
-      status: data.status,
-      timestamp: serverTimestamp(),
       title: actionText,
-      type: 'info'
+      type: 'info',
+      isRead: false,
+      timestamp: serverTimestamp()
     });
   } catch(e) {
     console.error("Gagal mencatat log dari Telegram:", e);
@@ -132,27 +140,32 @@ bot.onText(/\/status/, async (msg) => {
   const chatId = msg.chat.id;
   
   try {
-    const dbRefs = ['intensitas', 'cahaya', 'status', 'mode', 'threshold', 'position', 'Suhu'];
-    const data = {};
-    for (const key of dbRefs) {
-      const snap = await get(ref(database, `/${key}`));
-      data[key] = snap.exists() ? snap.val() : null;
-    }
+    const [snapHujan, snapCahaya, snapCanopy, snapSettings] = await Promise.all([
+      get(ref(database, '/sensors/hujan')),
+      get(ref(database, '/sensors/cahaya')),
+      get(ref(database, '/canopy')),
+      get(ref(database, '/settings'))
+    ]);
 
-    const cahayaVal = data.cahaya || 0;
-    // Kalibrasi konversi suhu: Base 24°C + (Lux * 0.12)
-    const suhuKonversi = data.Suhu || Math.round(24 + (cahayaVal * 0.12));
+    const hujanVal = snapHujan.val() || {};
+    const cahayaVal = snapCahaya.val() || {};
+    const canopyVal = snapCanopy.val() || {};
+    const settingsVal = snapSettings.val() || {};
+
+    const isRaining = hujanVal.isRaining || false;
+    const lux = cahayaVal.lux || 0;
+    const suhuKonversi = Math.round(24 + (lux * 0.12));
 
     const statusMessage = `
 ☁️ *STATUS SISTEM CENSOR SAAT INI* ☁️
 
-🌧️ *Curah Hujan:* ${data.intensitas || 0}% 
-☀️ *Iluminasi Cahaya:* ${cahayaVal} Lux
+🌧️ *Status Hujan:* ${isRaining ? 'Hujan' : 'Cerah'}
+☀️ *Iluminasi Cahaya:* ${lux} Lux
 🌡️ *Temperatur Udara:* ${suhuKonversi}°C
-🔄 *Kondisi Kanopi:* ${data.status === 'CLOSED' ? '🔴 Tertutup' : '🟢 Terbuka'}
-⚙️ *Mode Kendali:* \`${data.mode || 'AUTO'}\`
-📈 *Batas Threshold Cuaca:* ${data.threshold || 0}
-⏱️ *Posisi Motor Lengan:* ${data.position || 0}%
+🔄 *Kondisi Kanopi:* ${canopyVal.status === 'CLOSED' ? '🔴 Tertutup' : '🟢 Terbuka'}
+⚙️ *Mode Kendali:* \`${settingsVal.mode || 'AUTO'}\`
+📈 *Batas Threshold Cahaya:* ${settingsVal.threshold || 0}
+⏱️ *Posisi Motor Lengan:* ${canopyVal.position || 0}%
 `;
     bot.sendMessage(chatId, statusMessage, { parse_mode: 'Markdown' });
   } catch (error) {
@@ -166,10 +179,10 @@ bot.onText(/\/buka/, async (msg) => {
   const chatId = msg.chat.id;
   
   try {
-    await update(ref(database), { 
-      '/mode': 'MANUAL',
-      '/status': 'OPEN'
-    });
+    await Promise.all([
+      update(ref(database, '/settings'), { mode: 'MANUAL' }),
+      update(ref(database, '/canopy'), { status: 'OPEN', position: 100 })
+    ]);
     
     // Simpan ke notifikasi Dashboard WEB
     await letakDataRiwayat('Buka Kanopi');
@@ -186,10 +199,10 @@ bot.onText(/\/tutup/, async (msg) => {
   const chatId = msg.chat.id;
   
   try {
-    await update(ref(database), { 
-      '/mode': 'MANUAL',
-      '/status': 'CLOSED'
-    });
+    await Promise.all([
+      update(ref(database, '/settings'), { mode: 'MANUAL' }),
+      update(ref(database, '/canopy'), { status: 'CLOSED', position: 0 })
+    ]);
     
     // Simpan ke notifikasi Dashboard WEB
     await letakDataRiwayat('Tutup Kanopi');
@@ -205,8 +218,8 @@ bot.onText(/\/otomatis/, async (msg) => {
   const chatId = msg.chat.id;
   
   try {
-    await update(ref(database), { 
-      '/mode': 'AUTO'
+    await update(ref(database, '/settings'), { 
+      mode: 'AUTO'
     });
     
     // Simpan ke notifikasi Dashboard WEB
@@ -280,7 +293,9 @@ bot.onText(/\/unduh/, async (msg) => {
         const rincianJam = dateObj.toLocaleTimeString('id-ID');
         const safeMem = String(log.message).replace(/,/g, ':'); // Hapus koma di string message agar tidak bentrok CSV
         
-        csvContent += `${tanggalLengkap},${rincianJam},${log.status || '-'},${log.mode || '-'},${safeMem}\n`;
+        const status = log.canopy?.status || log.status || '-';
+        const mode = log.settings?.mode || log.mode || '-';
+        csvContent += `${tanggalLengkap},${rincianJam},${status},${mode},${safeMem}\n`;
       });
 
       const buffer = Buffer.from(csvContent, 'utf-8');

@@ -14,6 +14,7 @@
 //    READ  → /canopy/status (perintah manual)
 // ============================================================
 
+import 'dotenv/config';
 import { initializeApp } from "firebase/app";
 import {
   getDatabase, ref, onValue, update, push,
@@ -22,13 +23,13 @@ import {
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyChn7VdSPluklKEiNaHCY4chWSwjm4iNGw",
-  authDomain: "smartcanopy-57d8a.firebaseapp.com",
-  projectId: "smartcanopy-57d8a",
-  storageBucket: "smartcanopy-57d8a.firebasestorage.app",
-  messagingSenderId: "1004945227100",
-  appId: "1:1004945227100:web:7b1ca799e42b023d9dd599",
-  databaseURL: "https://smartcanopy-57d8a-default-rtdb.firebaseio.com"
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VITE_FIREBASE_APP_ID,
+  databaseURL: process.env.VITE_FIREBASE_DATABASE_URL
 };
 
 const app  = initializeApp(firebaseConfig);
@@ -39,12 +40,12 @@ const MAX_RECORDS = 1000; // Rolling window: simpan maks 1000 record
 
 console.log("🚀 Menghubungkan ke Firebase...");
 
-signInWithEmailAndPassword(auth, "moetiasafitri@gmail.com", "123456")
+signInWithEmailAndPassword(auth, process.env.FIREBASE_EMAIL, process.env.FIREBASE_PASSWORD)
   .then(() => {
     console.log("🟢 Simulator Terautentikasi! Memulai simulasi...");
     startSimulator();
   })
-  .catch((error) => console.error("🔴 Gagal Login:", error.message));
+  .catch((error) => console.error("🔴 Gagal Login Simulator:", error.message));
 
 
 // ─── Rolling Window: hapus data history lama ──────────────────────────────
@@ -116,7 +117,8 @@ function startSimulator() {
     // — Logika status kanopi —
     let statusSekarang;
     if (state.mode === "AUTO") {
-      statusSekarang = intensitas > state.threshold ? "CLOSED" : "OPEN";
+      // Menutup jika hujan ATAU jika cahaya lebih rendah dari threshold (terlalu gelap)
+      statusSekarang = (isRaining || cahaya < state.threshold) ? "CLOSED" : "OPEN";
     } else {
       statusSekarang = state.manualStatus; // Ikut perintah web di mode MANUAL
     }

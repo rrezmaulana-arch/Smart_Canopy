@@ -140,10 +140,11 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   // Menggunakan global state Firebase untuk mencegah lag & double query
-  const { telemetry, isConnected, isHardwareOnline } = useFirebaseData();
+  const { telemetry, historyLogs, isConnected, isHardwareOnline } = useFirebaseData();
 
   // Membongkar dari context
   const {
+    isRaining = false,
     intensitas = 0,
     cahaya = 0,
     Suhu = 0,
@@ -154,7 +155,7 @@ export default function Dashboard() {
 
   // Nilai dummy jika tidak terhubung
   const displayTemp = isHardwareOnline ? Suhu : '--';
-  const displayRain = isHardwareOnline ? intensitas : '--';
+  const displayRain = isHardwareOnline ? (isRaining ? 'Hujan' : 'Cerah') : '--';
   const displayLight = isHardwareOnline ? cahaya : '--';
   const displayStatus = isHardwareOnline ? (status === 'CLOSED' ? 'CLOSE' : 'OPEN') : 'OFFLINE';
 
@@ -235,11 +236,10 @@ export default function Dashboard() {
         {/* Rain Flux Card */}
         <StatCard
           isDark={isDark}
-          title="Rain Intensity"
+          title="Status Hujan"
           value={
             <div className="flex items-end gap-2">
-              <span>{displayRain}</span>
-              <span className={`text-xl font-bold mb-1 ${isDark ? 'text-pink-400/70' : 'text-pink-500/70'}`}>%</span>
+              <span className="text-2xl font-black md:text-3xl lg:text-4xl">{displayRain}</span>
             </div>
           }
           subtitle={
@@ -437,9 +437,9 @@ export default function Dashboard() {
         <div className="lg:col-span-4 flex flex-col gap-4 md:gap-6">
           <StatCard
             isDark={isDark}
-            title="System Integrity"
-            value={isConnected ? "Nominal" : "Offline"}
-            subtitle={<>{isConnected ? "All checks passed" : "Hardware connection failed"} <ChevronRight size={12} className={isDark ? "text-pink-500/50" : "text-slate-300"} /></>}
+            title="Total Data Masuk"
+            value={historyLogs.length}
+            subtitle={<>{isConnected ? "Database tersinkronisasi" : "Hardware connection failed"} <ChevronRight size={12} className={isDark ? "text-pink-500/50" : "text-slate-300"} /></>}
             icon={<Activity />}
             iconColor="text-[#EC4899]"
           >

@@ -246,25 +246,28 @@ export default function DataHistoris() {
 
     if (historyLogs.length > 0) {
       const fetchedLogs = historyLogs.map(item => {
-        const val = item.intensitas || 0;
+        const val = item.sensors?.hujan?.intensitas ?? item.intensitas ?? 0;
+        const isRaining = item.sensors?.hujan?.isRaining ?? item.isRaining ?? (val > 0);
         const dateObj = new Date(item.timestamp);
+        const statusVal = item.canopy?.status ?? item.status ?? 'OPEN';
+        const cahayaVal = item.sensors?.cahaya?.lux ?? item.cahaya ?? 0;
 
         // UI Status
-        const uiStatus = item.status === 'CLOSED' ? 'Close' : 'Open';
+        const uiStatus = statusVal === 'CLOSED' ? 'Close' : 'Open';
 
         return {
           id: item.id,
           date: dateObj.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' }),
           time: dateObj.toLocaleTimeString('en-GB', { hour12: false }),
-          weather: val >= threshold ? 'Heavy Rain' : val >= 40 ? 'Light Rain' : 'Clear Sky',
-          icon: val >= threshold ? <CloudRain /> : val >= 40 ? <SunMedium /> : <Sun />,
+          weather: isRaining ? 'Hujan' : 'Cerah',
+          icon: isRaining ? <CloudRain /> : <Sun />,
           status: uiStatus,
           luminosity: val,
-          color: item.status === 'CLOSED' ? 'text-pink-500' : 'text-emerald-500',
-          dot: item.status === 'CLOSED' ? 'bg-pink-500' : 'bg-emerald-500',
+          color: statusVal === 'CLOSED' ? 'text-pink-500' : 'text-emerald-500',
+          dot: statusVal === 'CLOSED' ? 'bg-pink-500' : 'bg-emerald-500',
           trigger: item.title || 'Auto',
           timestamp: item.timestamp,
-          cahaya: item.cahaya || 0
+          cahaya: cahayaVal
         } as UIRow;
       });
 
@@ -300,22 +303,25 @@ export default function DataHistoris() {
         const loadedArray = Object.keys(rawData).map((key) => {
           const item = rawData[key];
           const ts = item.timestamp ? new Date(item.timestamp) : new Date();
-          const val = item.intensitas || 0;
-          const uiStatus = item.status === 'CLOSED' ? 'Close' : 'Open';
+          const val = item.sensors?.hujan?.intensitas ?? item.intensitas ?? 0;
+          const isRaining = item.sensors?.hujan?.isRaining ?? item.isRaining ?? (val > 0);
+          const statusVal = item.canopy?.status ?? item.status ?? 'OPEN';
+          const cahayaVal = item.sensors?.cahaya?.lux ?? item.cahaya ?? 0;
+          const uiStatus = statusVal === 'CLOSED' ? 'Close' : 'Open';
 
           return {
             id: key,
             date: ts.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' }),
             time: ts.toLocaleTimeString('en-GB', { hour12: false }),
-            weather: val >= threshold ? 'Heavy Rain' : val >= 40 ? 'Light Rain' : 'Clear Sky',
-            icon: val >= threshold ? <CloudRain /> : val >= 40 ? <SunMedium /> : <Sun />,
+            weather: isRaining ? 'Hujan' : 'Cerah',
+            icon: isRaining ? <CloudRain /> : <Sun />,
             status: uiStatus,
             luminosity: val,
-            color: item.status === 'CLOSED' ? 'text-pink-500' : 'text-emerald-500',
-            dot: item.status === 'CLOSED' ? 'bg-pink-500' : 'bg-emerald-500',
+            color: statusVal === 'CLOSED' ? 'text-pink-500' : 'text-emerald-500',
+            dot: statusVal === 'CLOSED' ? 'bg-pink-500' : 'bg-emerald-500',
             trigger: item.title || item.trigger || 'Auto',
             timestamp: item.timestamp || Date.now(),
-            cahaya: item.cahaya || 0
+            cahaya: cahayaVal
           } as UIRow;
         });
 
@@ -448,8 +454,8 @@ export default function DataHistoris() {
                 <p className={`font-black uppercase tracking-wider text-[11px] ${selectedRow.color}`}>{selectedRow.status}</p>
               </div>
               <div className="flex justify-between items-center pb-4 border-b border-slate-500/20">
-                <span className={`text-xs font-bold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Intensitas Hujan</span>
-                <p className={`font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>{selectedRow.luminosity}%</p>
+                <span className={`text-xs font-bold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Status Hujan</span>
+                <p className={`font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>{selectedRow.weather}</p>
               </div>
               <div className="flex justify-between items-center">
                 <span className={`text-xs font-bold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Intensitas Cahaya</span>
@@ -607,7 +613,7 @@ export default function DataHistoris() {
       {/* STAT CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
         <StatCard isDark={isDark} title="Total Catatan" value={logs.length.toString()} sub="Nodes logged dynamically" icon={<Activity />} color="text-blue-500" />
-        <StatCard isDark={isDark} title="Rasio Terbuka" value={`${Math.round((logs.filter(l => l.status === 'Deployed').length / Math.max(logs.length, 1)) * 100)}%`} sub="Waktu kanopi terbuka" icon={<Sun />} color="text-pink-500" />
+        <StatCard isDark={isDark} title="Status Kanopi" value={logs.length > 0 ? logs[0].status : "N/A"} sub="Status saat ini" icon={<Sun />} color="text-pink-500" />
         <StatCard isDark={isDark} title="Status Sistem" value="99.8%" sub="Uptime sistem normal" icon={<ShieldCheck />} color="text-emerald-500" />
       </div>
 
@@ -628,7 +634,7 @@ export default function DataHistoris() {
                 <th className={`px-8 py-6 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Waktu</th>
                 <th className={`px-8 py-6 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Kondisi Cuaca</th>
                 <th className={`px-8 py-6 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Status Kanopi</th>
-                <th className={`px-8 py-6 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Int. Hujan</th>
+                <th className={`px-8 py-6 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Status Hujan</th>
                 <th className={`px-8 py-6 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Int. Cahaya</th>
                 <th className="px-8 py-6"></th>
               </tr>
@@ -674,7 +680,7 @@ export default function DataHistoris() {
                     </td>
                     <td className="px-8 py-5">
                       <div className={`text-sm font-black tracking-wide ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                        {r.luminosity}%
+                        {r.weather}
                       </div>
                     </td>
                     <td className="px-8 py-5">

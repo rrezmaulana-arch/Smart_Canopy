@@ -259,8 +259,8 @@ export default function Control() {
                 <div className={`text-4xl font-black italic leading-none ${textMuted}`}>12.4 <span className="text-[12px] not-italic ml-1">km/h</span></div>
               </div>
               <div className="text-right">
-                <div className={`text-[10px] font-black uppercase mb-2 flex items-center justify-end gap-2 text-[#10B981]`}><CloudRain size={14} /> Curah Hujan</div>
-                <div className={`text-4xl font-black italic leading-none ${textMain}`}>{dbData.intensitas} <span className="text-[12px] text-slate-400 not-italic ml-1">%</span></div>
+                <div className={`text-[10px] font-black uppercase mb-2 flex items-center justify-end gap-2 text-[#10B981]`}><CloudRain size={14} /> Status Hujan</div>
+                <div className={`text-4xl font-black italic leading-none ${textMain}`}>{dbData.intensitas > 0 ? 'Hujan' : 'Cerah'}</div>
               </div>
               <div className="text-right">
                 <div className={`text-[10px] font-black uppercase mb-2 flex items-center justify-end gap-2 text-amber-500`}><Sun size={14} /> Int. Cahaya</div>
@@ -338,8 +338,8 @@ export default function Control() {
         <GlassCard isDark={isDark} className={`rounded-[2.5rem] p-8 space-y-6 transition-all duration-500 ${!isManual ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
           <div className="flex justify-between items-center border-b pb-4 border-slate-500/10">
             <div className="flex items-center gap-3">
-              <Target size={20} className="text-emerald-500" />
-              <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textMain}`}>Sensitivitas Hujan</h3>
+              <Sun size={20} className="text-emerald-500" />
+              <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textMain}`}>Sensitivitas Cahaya</h3>
             </div>
             <span className={`text-2xl font-black tabular-nums ${textMain}`}>{localThreshold}%</span>
           </div>
@@ -354,8 +354,8 @@ export default function Control() {
             className={`w-full h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500 ${sliderTrack} disabled:cursor-not-allowed`}
           />
           <div className="flex justify-between mt-2 text-[9px] font-black text-slate-500 uppercase tracking-tighter">
-            <span>Sangat Sensitif (0%)</span>
-            <span>Kurang Sensitif (100%)</span>
+            <span>Gelap (0%)</span>
+            <span>Terang (100%)</span>
           </div>
           {!isManual && (
             <p className={`text-[10px] text-center italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
