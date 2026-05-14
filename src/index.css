@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-dark: #030508;
+  --bg-light: #F8FAFC;
+  --text: #bfc6d1;
+  --neon-pink: #ff00e5;
+  --sans: 'Sora', 'Inter', sans-serif;
+}
+
+/* --- OPTIMISASI GLOBAL --- */
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+/* Allow text selection and native cursor in inputs */
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+  cursor: text !important;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  font-family: var(--sans);
+  /* Let the child layout control background per-theme */
+  background-color: var(--bg-dark);
+  color: var(--text);
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--sans);
+  /* Don't force a colour here — let layouts set their own background */
+  background-color: transparent;
+  min-height: 100%;
+  
+  /* Mencegah text block layaknya fitur aplikasi Native */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Dark-mode body background (applied by App root) */
+body.dark-mode {
+  background-color: var(--bg-dark);
+}
+
+body.light-mode {
+  background-color: var(--bg-light);
+}
+
+/* --- GLASS EFFECT --- */
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(10, 12, 18, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* --- SCROLLBAR (thin, elegant) --- */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.4);
+}
+
+/* --- CUSTOM SCROLLBAR for notification list --- */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.25);
+  border-radius: 99px;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(200%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}

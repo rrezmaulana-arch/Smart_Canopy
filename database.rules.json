@@ -1,0 +1,36 @@
+{
+  "rules": {
+
+    "sensors": {
+      "hujan": {
+        ".read": true,
+        ".write": true
+      },
+      "cahaya": {
+        ".read": true,
+        ".write": true
+      }
+    },
+
+    "canopy": {
+      ".read": true,
+      ".write": true
+    },
+
+    "settings": {
+      ".read": true,
+      ".write": true
+    },
+
+    "system": {
+      ".read": true,
+      ".write": true
+    },
+
+    "Data_Historis": {
+      ".read": true,
+      ".write": true
+    }
+
+  }
+}
