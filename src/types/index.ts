@@ -52,6 +52,8 @@ export interface TelemetryData {
   cahayaRaw?: number;       // raw ADC
   cahayaLastUpdated?: number;
 
+  Suhu?: number;
+
   // dari /canopy/
   status: 'OPEN' | 'CLOSED' | 'PARTIAL' | string;
   position: number;
@@ -75,6 +77,19 @@ export interface HistoryLog {
   timestamp: number;
 
   // Sensor data (nested baru)
+  sensors?: {
+    hujan?: {
+      intensitas?: number;
+      isRaining?: boolean;
+    };
+    cahaya?: {
+      lux?: number;
+    };
+  };
+  canopy?: {
+    status?: string;
+  };
+
   intensitas: number;       // sensors/hujan/intensitas ATAU intensitas (flat lama)
   cahaya: number;           // sensors/cahaya/lux ATAU cahaya (flat lama)
   isRaining?: boolean;
