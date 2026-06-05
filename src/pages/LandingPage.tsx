@@ -234,9 +234,9 @@ function GachaCard({ m, offset, onClick, isActive, isDark }: any) {
 function TeamCarousel({ isDark }: { isDark: boolean }) {
   const TEAM_MEMBERS = [
     { name: 'Moetia Safitri<br/>Agustina', nim: '24314070111038', color: '#ff2a85', image: moetiaImg, jobdesk: ['Fullstack Developer', 'API & Database', '3D Design'], instagram: 'https://www.instagram.com/moetia.sf?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' },
-    { name: 'Naftalia Frendsiska<br/>Rumahorbo', nim: '24314070111035', color: '#10b981', image: naftaliaImg, jobdesk: ['IoT Hardware Engineering', 'Physical Prototyping', 'Diorama Architecture'] },
-    { name: 'Raja Shaka<br/>Quranique', nim: '243140701111026', color: '#f59e0b', image: radjaImg, jobdesk: ['System Integration', 'Network Operations', 'Documentation Specialist'] },
-    { name: 'Dhea Nur Indah<br/>Ramadhani', nim: '243140701111021', color: '#0ea5e9', image: dheaImg, jobdesk: ['Embedded Systems', 'Hardware Assembly', 'Scale Modeling (Maket)'] }
+    { name: 'Naftalia Frendsiska<br/>Rumahorbo', nim: '24314070111035', color: '#10b981', image: naftaliaImg, jobdesk: ['IoT Hardware Engineering', 'Physical Prototyping', 'Diorama Architecture'], instagram: 'https://www.instagram.com/frndskaa/?utm_source=ig_web_button_share_sheet' },
+    { name: 'Raja Shaka<br/>Quranique', nim: '243140701111026', color: '#f59e0b', image: radjaImg, jobdesk: ['System Integration', 'Network Operations', 'Documentation Specialist'], instagram: 'https://www.instagram.com/rs.quranique?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' },
+    { name: 'Dhea Nur Indah<br/>Ramadhani', nim: '243140701111021', color: '#0ea5e9', image: dheaImg, jobdesk: ['Embedded Systems', 'Hardware Assembly', 'Scale Modeling (Maket)'], instagram: 'https://www.instagram.com/dheanrmd?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' }
   ];
 
   const [active, setActive] = useState(0);
