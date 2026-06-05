@@ -14,6 +14,10 @@ import {
   Cpu, Droplets, Thermometer, Wind, Sun,
   Play, Square, ChevronDown, Menu, X, Send, Moon, User, UserCheck, ChevronLeft, ChevronRight, Check
 } from 'lucide-react';
+import moetiaImg from '../assets/images/Moetias.jpeg';
+import naftaliaImg from '../assets/images/Naftalia.jpeg';
+import radjaImg from '../assets/images/Radja.jpeg';
+import dheaImg from '../assets/images/Dhea.jpeg';
 
 // ─────────────────────────────────────────────────────────
 // 3D MODEL
@@ -229,10 +233,10 @@ function GachaCard({ m, offset, onClick, isActive, isDark }: any) {
 
 function TeamCarousel({ isDark }: { isDark: boolean }) {
   const TEAM_MEMBERS = [
-    { name: 'Moetia Safitri<br/>Agustina', nim: '24314070111038', color: '#ff2a85', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80', jobdesk: ['Fullstack Developer', 'API & Database', '3D Design'], instagram: 'https://www.instagram.com/moetia.sf?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' },
-    { name: 'Naftalia Frendsiska<br/>Rumahorbo', nim: '24314070111035', color: '#10b981', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', jobdesk: ['IoT Hardware Engineering', 'Physical Prototyping', 'Diorama Architecture'] },
-    { name: 'Raja Shaka<br/>Quranique', nim: '243140701111026', color: '#f59e0b', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80', jobdesk: ['System Integration', 'Network Operations', 'Documentation Specialist'] },
-    { name: 'Dhea Nur Indah<br/>Ramadhani', nim: '243140701111021', color: '#0ea5e9', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80', jobdesk: ['Embedded Systems', 'Hardware Assembly', 'Scale Modeling (Maket)'] }
+    { name: 'Moetia Safitri<br/>Agustina', nim: '24314070111038', color: '#ff2a85', image: moetiaImg, jobdesk: ['Fullstack Developer', 'API & Database', '3D Design'], instagram: 'https://www.instagram.com/moetia.sf?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' },
+    { name: 'Naftalia Frendsiska<br/>Rumahorbo', nim: '24314070111035', color: '#10b981', image: naftaliaImg, jobdesk: ['IoT Hardware Engineering', 'Physical Prototyping', 'Diorama Architecture'] },
+    { name: 'Raja Shaka<br/>Quranique', nim: '243140701111026', color: '#f59e0b', image: radjaImg, jobdesk: ['System Integration', 'Network Operations', 'Documentation Specialist'] },
+    { name: 'Dhea Nur Indah<br/>Ramadhani', nim: '243140701111021', color: '#0ea5e9', image: dheaImg, jobdesk: ['Embedded Systems', 'Hardware Assembly', 'Scale Modeling (Maket)'] }
   ];
 
   const [active, setActive] = useState(0);
