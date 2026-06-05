@@ -317,6 +317,9 @@ export default async function handler(req, res) {
       const { body } = req;
       if (body) {
         bot.processUpdate(body);
+        // Tahan Vercel Function selama 3 detik agar async Firebase (get/update) selesai dieksekusi 
+        // sebelum Vercel mematikan process Node.js
+        await new Promise(resolve => setTimeout(resolve, 3000));
       }
       res.status(200).send('OK');
     } catch (error) {
