@@ -1,0 +1,12 @@
+# Mengabaikan folder dan file berikut saat di-copy ke Docker container
+node_modules
+dist
+.env
+.git
+.gitignore
+README.md
+Laporan_Bab_6_dan_7.txt
+Laporan_Teknologi.md
+android
+firmware
+esp-simulator.js
