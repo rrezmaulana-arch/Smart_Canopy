@@ -209,12 +209,17 @@ const WeatherReport = ({ isDark }: { isDark: boolean }) => {
 
 // ==================== GRAPH COMPONENT ====================
 const Graph = ({ dataPoints, color, glow, isDark }: { dataPoints: any[]; color: string; glow: string; isDark: boolean }) => {
-  if (dataPoints.length < 2) {
-    return <div className="h-full flex items-center justify-center text-slate-500 text-sm font-medium">Waiting for Firebase data...</div>;
+  if (dataPoints.length === 0) {
+    return <div className="h-full flex items-center justify-center text-slate-500 text-sm font-medium">Belum ada data historis di rentang waktu ini.</div>;
   }
 
   const MAX_DISPLAY_POINTS = 35;
-  let displayData = dataPoints;
+  let displayData = [...dataPoints];
+
+  // Jika hanya ada 1 data, duplikat menjadi 2 agar garis bisa digambar (membentang lurus)
+  if (displayData.length === 1) {
+    displayData = [displayData[0], { ...displayData[0], time: 'Sekarang' }];
+  }
 
   if (dataPoints.length > MAX_DISPLAY_POINTS) {
     const step = Math.ceil(dataPoints.length / MAX_DISPLAY_POINTS);
