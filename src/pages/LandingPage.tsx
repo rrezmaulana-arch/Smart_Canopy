@@ -24,7 +24,7 @@ import dheaImg from '../assets/images/Dhea.jpeg';
 // ─────────────────────────────────────────────────────────
 function CanopyModel({ isOpen, onLoaded }: { isOpen: boolean; onLoaded: () => void }) {
   const group = useRef<THREE.Group>(null!);
-  const { scene, animations } = useGLTF('/models/canopy otomatis.glb');
+  const { scene, animations } = useGLTF('/models/canopy-otomatis.glb');
   const { actions, names } = useAnimations(animations, group);
   const prevOpen = useRef<boolean | null>(null);
 
