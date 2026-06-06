@@ -336,8 +336,8 @@ export default function Monitoring() {
     else if (range === '7D') timeThreshold = now - (7 * 24 * 60 * 60 * 1000);
 
     const formatted = historyLogs
-      .filter((item) => (item.timestamp as number) >= timeThreshold)
-      .sort((a, b) => (a.timestamp as number) - (b.timestamp as number)) // Urutkan kronologis
+      .filter((item) => new Date(item.timestamp).getTime() >= timeThreshold)
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Urutkan kronologis
       .map((item) => {
         const dateObj = new Date(item.timestamp);
         let timeLabel = '';
