@@ -184,10 +184,7 @@ export default function Control() {
 
   return (
     <div className="max-w-[1400px] mx-auto p-6 md:p-10 space-y-8 animate-in fade-in duration-[800ms] relative">
-      <div className={`absolute inset-0 pointer-events-none -z-10 opacity-[0.03] ${isDark ? 'invert-0' : 'invert'}`}
-        style={{ backgroundImage: `radial-gradient(#fff 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
-
-      {/* Header */}
+      {/* HEADER */}
       <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
         <div className="flex items-center gap-4">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg italic border transition-all duration-[800ms] ${isManual ? 'bg-pink-500/20 border-pink-500/40 text-pink-500' : isDark ? 'bg-white/5 border-white/10 text-slate-600' : 'bg-slate-50 border-slate-200 text-slate-400'

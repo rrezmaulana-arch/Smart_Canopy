@@ -390,9 +390,6 @@ export default function DataHistoris() {
 
   return (
     <div className={`max-w-[1400px] mx-auto p-6 md:p-10 space-y-8 text-left transition-colors duration-700 relative`}>
-      <div className={`absolute inset-0 pointer-events-none -z-10 opacity-[0.03] ${isDark ? 'invert-0' : 'invert'}`}
-        style={{ backgroundImage: `radial-gradient(#fff 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
-
       {/* TOAST MESSAGE */}
       {toastMessage && (
         <div className={`fixed bottom-8 right-8 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border animate-in slide-in-from-bottom-8 fade-in duration-500 ${isDark ? 'bg-[#0A0F1C] border-emerald-500/30 text-white' : 'bg-white border-emerald-200 text-slate-800'

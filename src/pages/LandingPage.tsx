@@ -1036,7 +1036,6 @@ export default function LandingPage({ isDark = true, setIsDark }: { isDark?: boo
       `}</style>
 
       <div className={`lp ${!isDark ? 'light' : ''}`}>
-        <div className="lp-noise"></div>
         {/* NAV */}
         <nav className={`lp-nav${navScrolled ? ' scrolled' : ''}`}>
           <div className="lp-nav-inner">

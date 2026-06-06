@@ -377,9 +377,6 @@ export default function Monitoring() {
 
   return (
     <div className={`max-w-[1400px] mx-auto p-4 sm:p-6 md:p-10 space-y-6 sm:space-y-10 text-left transition-colors duration-700 relative`}>
-      <div className={`absolute inset-0 pointer-events-none -z-10 opacity-[0.03] ${isDark ? 'invert-0' : 'invert'}`}
-        style={{ backgroundImage: `radial-gradient(#fff 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
-
       {/* HEADER */}
       <div className={`flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6 pb-6 border-b ${isDark ? 'border-white/[0.06]' : 'border-slate-200'} text-left`}>
         <div>
