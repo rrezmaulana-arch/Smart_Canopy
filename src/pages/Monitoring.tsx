@@ -335,7 +335,7 @@ export default function Monitoring() {
     else if (range === '24H') timeThreshold = now - (24 * 60 * 60 * 1000);
     else if (range === '7D') timeThreshold = now - (7 * 24 * 60 * 60 * 1000);
 
-    const formatted = historyLogs
+    let formatted = historyLogs
       .filter((item) => new Date(item.timestamp).getTime() >= timeThreshold)
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Urutkan kronologis
       .map((item) => {
@@ -358,8 +358,29 @@ export default function Monitoring() {
         };
       });
 
+    // Selalu tambahkan data real-time saat ini agar grafik tidak pernah kosong
+    const nowLabel = range === '7D' ? 'Hari Ini' : 'Sekarang';
+    const currentData = {
+      time: nowLabel,
+      rain: telemetry.intensitas || 0,
+      light: telemetry.cahaya || 0
+    };
+
+    // Jika history kosong, buat 2 titik (masa lalu dan sekarang) agar grafik lurus terbentuk
+    if (formatted.length === 0) {
+      formatted = [
+        { time: range === '1H' ? '-1 Jam' : range === '24H' ? '-24 Jam' : '-7 Hari', rain: telemetry.intensitas || 0, light: telemetry.cahaya || 0 },
+        currentData
+      ];
+    } else {
+      // Jika waktu poin terakhir sama dengan "Sekarang", timpa saja
+      if (formatted[formatted.length - 1].time !== nowLabel) {
+         formatted.push(currentData);
+      }
+    }
+
     setHistoryList(formatted);
-  }, [range, historyLogs]);
+  }, [range, historyLogs, telemetry]);
 
   const handleGraphMouseMove = (e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
