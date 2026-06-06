@@ -193,11 +193,24 @@ Akses di browser: `http://localhost:5173`
 
 4. Pilih board **ESP32 Dev Module**, lalu Upload
 
-### 6. (Opsional) Jalankan Telegram Bot
+### 6. Jalankan Telegram Bot
 
+**A. Mode Lokal (Polling)**
+Jika Anda menguji aplikasi di komputer lokal, jalankan perintah ini di terminal baru:
 ```bash
 npm run bot
 ```
+
+**B. Mode Vercel (Webhook)**
+Jika Anda melakukan deploy proyek ini ke Vercel, bot Telegram sudah dikonfigurasi sebagai Serverless Function di route `/api/bot`. Anda perlu mendaftarkan webhook agar Telegram mengirim data ke Vercel:
+1. Masukkan semua kredensial dari file `.env` Anda ke **Environment Variables** di dashboard Vercel.
+2. Lakukan _Redeploy_ di Vercel agar environment variables terbaca.
+3. Buka browser dan daftarkan webhook menggunakan URL ini:
+   ```text
+   https://api.telegram.org/bot<TOKEN_BOT_ANDA>/setWebhook?url=https://<URL_VERCEL_ANDA>/api/bot
+   ```
+   *(Ganti `<TOKEN_BOT_ANDA>` dengan token dari BotFather, dan `<URL_VERCEL_ANDA>` dengan domain Vercel Anda).*
+4. Jika berhasil, akan muncul pesan `{"ok":true,"result":true,"description":"Webhook was set"}`.
 
 ---
 
