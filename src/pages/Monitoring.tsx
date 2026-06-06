@@ -317,7 +317,7 @@ export default function Monitoring() {
 
   const { telemetry, historyLogs, isConnected } = useFirebaseData();
 
-  const [range, setRange] = useState<'1H' | '24H' | '7D'>('1H');
+  const [range, setRange] = useState<'1H' | '24H' | 'All-Time'>('1H');
   const [historyList, setHistoryList] = useState<any[]>([]);
   const [graphGlowPos, setGraphGlowPos] = useState({ x: 50, y: 50 });
 
@@ -333,7 +333,7 @@ export default function Monitoring() {
 
     if (range === '1H') timeThreshold = now - (1 * 60 * 60 * 1000);
     else if (range === '24H') timeThreshold = now - (24 * 60 * 60 * 1000);
-    else if (range === '7D') timeThreshold = now - (7 * 24 * 60 * 60 * 1000);
+    else if (range === 'All-Time') timeThreshold = 0; // Tampilkan semua waktu
 
     let formatted = historyLogs
       .filter((item) => new Date(item.timestamp).getTime() >= timeThreshold)
@@ -346,9 +346,10 @@ export default function Monitoring() {
           timeLabel = `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
         } else if (range === '24H') {
           timeLabel = `${dateObj.getHours().toString().padStart(2, '0')}:00`;
-        } else if (range === '7D') {
-          const namaHari = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-          timeLabel = namaHari[dateObj.getDay()];
+        } else if (range === 'All-Time') {
+          const dd = dateObj.getDate().toString().padStart(2, '0');
+          const mm = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+          timeLabel = `${dd}/${mm}`;
         }
 
         return {
@@ -359,7 +360,7 @@ export default function Monitoring() {
       });
 
     // Selalu tambahkan data real-time saat ini agar grafik tidak pernah kosong
-    const nowLabel = range === '7D' ? 'Hari Ini' : 'Sekarang';
+    const nowLabel = range === 'All-Time' ? 'Hari Ini' : 'Sekarang';
     const currentData = {
       time: nowLabel,
       rain: telemetry.intensitas || 0,
@@ -369,7 +370,7 @@ export default function Monitoring() {
     // Jika history kosong, buat 2 titik (masa lalu dan sekarang) agar grafik lurus terbentuk
     if (formatted.length === 0) {
       formatted = [
-        { time: range === '1H' ? '-1 Jam' : range === '24H' ? '-24 Jam' : '-7 Hari', rain: telemetry.intensitas || 0, light: telemetry.cahaya || 0 },
+        { time: range === '1H' ? '-1 Jam' : range === '24H' ? '-24 Jam' : 'Awal', rain: telemetry.intensitas || 0, light: telemetry.cahaya || 0 },
         currentData
       ];
     } else {
@@ -393,7 +394,7 @@ export default function Monitoring() {
   const theme = {
     '1H': { hex: '#EC4899', glow: 'rgba(236,72,153,0.3)' },
     '24H': { hex: '#10B981', glow: 'rgba(16,185,129,0.3)' },
-    '7D': { hex: '#8B5CF6', glow: 'rgba(139,92,246,0.3)' },
+    'All-Time': { hex: '#8B5CF6', glow: 'rgba(139,92,246,0.3)' },
   }[range] || { hex: '#EC4899', glow: 'rgba(236,72,153,0.3)' };
 
   return (
@@ -474,7 +475,7 @@ export default function Monitoring() {
           </div>
 
           <div className={`flex w-full md:w-auto p-1.5 rounded-2xl border overflow-x-auto hide-scrollbar ${isDark ? 'bg-black/40 border-white/5' : 'bg-slate-100 border-slate-200'}`}>
-            {(['1H', '24H', '7D'] as const).map((r) => (
+            {(['1H', '24H', 'All-Time'] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
