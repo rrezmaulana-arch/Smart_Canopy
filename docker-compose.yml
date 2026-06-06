@@ -1,0 +1,12 @@
+services:
+  canopy-web:
+    build: .
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - proxy_network
+
+networks:
+  proxy_network:
+    external: true
