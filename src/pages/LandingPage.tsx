@@ -183,10 +183,10 @@ function GachaCard({ m, offset, onClick, isActive, isDark }: any) {
               
               {/* Text & Button Area */}
               <div className={`px-6 pb-6 flex flex-col flex-1 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isRevealed ? 'mt-0' : '-mt-[90px] relative z-10'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                      <h3 className={`${isDark ? 'text-white' : 'text-slate-800'} text-[22px] font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis m-0 drop-shadow-sm`} dangerouslySetInnerHTML={{ __html: m.name.replace('<br/>', ' ') }}></h3>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className={`${isDark ? 'text-white' : 'text-slate-800'} text-[20px] font-extrabold tracking-tight leading-tight m-0 drop-shadow-sm`} dangerouslySetInnerHTML={{ __html: m.name }}></h3>
                       {isActive && (
-                         <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full w-5 h-5 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.4)] ml-1">
+                         <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full w-5 h-5 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.4)] mt-1">
                             <Check size={13} className="text-white" strokeWidth={3} />
                          </div>
                       )}
