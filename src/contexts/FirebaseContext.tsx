@@ -133,7 +133,7 @@ export const FirebaseDataProvider: React.FC<{ children: ReactNode }> = ({ childr
     });
 
     // ─── 3. History Logs (100 terbaru) ────────────────────────────────────
-    const historyRef = query(ref(database, '/Data_Historis'), limitToLast(100));
+    const historyRef = query(ref(database, '/Data_Historis'), limitToLast(500));
     const historyUnsub = onValue(historyRef, (snapshot) => {
       if (!snapshot.exists()) {
         setHistoryLogs([]);
@@ -143,7 +143,15 @@ export const FirebaseDataProvider: React.FC<{ children: ReactNode }> = ({ childr
       const rawHistory = snapshot.val();
       const logsArray: HistoryLog[] = Object.keys(rawHistory).map((key) => {
         const item = rawHistory[key];
-        const ts = item.timestamp ? new Date(item.timestamp) : new Date();
+          // Timestamp: Firebase serverTimestamp gives object on push, numeric on read
+          let tsNum: number = Date.now();
+          if (typeof item.timestamp === 'number') {
+            tsNum = item.timestamp;
+          } else if (item.timestamp && typeof item.timestamp === 'object' && (item.timestamp as any)['.sv'] === undefined) {
+            // Already resolved server timestamp stored as number
+            tsNum = Number(item.timestamp);
+          }
+          const ts = new Date(tsNum);
 
         // Dukung struktur baru (nested) & lama (flat)
         const intensitas =
@@ -186,7 +194,7 @@ export const FirebaseDataProvider: React.FC<{ children: ReactNode }> = ({ childr
           time: ts.toLocaleTimeString('id-ID', { hour12: false }),
           date: ts.toISOString().split('T')[0],
           isRead: item.isRead || false,
-          timestamp: item.timestamp || Date.now(),
+          timestamp: tsNum,
           intensitas,
           cahaya,
           isRaining,
@@ -198,7 +206,14 @@ export const FirebaseDataProvider: React.FC<{ children: ReactNode }> = ({ childr
         } as HistoryLog;
       });
 
-      setHistoryLogs(logsArray.reverse()); // terbaru di atas
+      // Sort by timestamp numerically (newest first)
+      logsArray.sort((a, b) => {
+        const tA = typeof a.timestamp === 'number' ? a.timestamp : 0;
+        const tB = typeof b.timestamp === 'number' ? b.timestamp : 0;
+        return tB - tA; // descending
+      });
+
+      setHistoryLogs(logsArray);
     });
 
     // ─── Cleanup ──────────────────────────────────────────────────────────

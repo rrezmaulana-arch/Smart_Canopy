@@ -242,8 +242,6 @@ export default function DataHistoris() {
 
   useEffect(() => {
     setIsLoading(true);
-    const threshold = parseInt(localStorage.getItem('automation-threshold') || '65', 10);
-
     if (historyLogs.length > 0) {
       const fetchedLogs = historyLogs.map(item => {
         const val = item.sensors?.hujan?.intensitas ?? item.intensitas ?? 0;
@@ -265,7 +263,7 @@ export default function DataHistoris() {
           luminosity: val,
           color: statusVal === 'CLOSED' ? 'text-pink-500' : 'text-emerald-500',
           dot: statusVal === 'CLOSED' ? 'bg-pink-500' : 'bg-emerald-500',
-          trigger: item.title || 'Auto',
+          trigger: item.trigger || item.title || 'Auto',
           timestamp: item.timestamp,
           cahaya: cahayaVal
         } as UIRow;
@@ -298,8 +296,6 @@ export default function DataHistoris() {
       const snap = await get(historyTable);
       if (snap.exists()) {
         const rawData = snap.val();
-        const threshold = parseInt(localStorage.getItem('automation-threshold') || '65', 10);
-
         const loadedArray = Object.keys(rawData).map((key) => {
           const item = rawData[key];
           const ts = item.timestamp ? new Date(item.timestamp) : new Date();

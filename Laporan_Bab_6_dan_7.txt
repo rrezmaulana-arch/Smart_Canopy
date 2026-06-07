@@ -1,0 +1,122 @@
+6.11. Implementasi
+Hasil implementasi sistem informasi Smart Canopy mencakup desain antarmuka pengguna (User Interface) dan penjelasan fungsionalitas dari setiap halaman untuk memastikan keselarasan dengan kebutuhan pengguna.
+
+6.11.1 Implementasi Landing Page
+
+(Gambar 6.1 Landing Page Smart Canopy)
+
+Landing page merupakan halaman awal yang ditampilkan ketika pengguna mengakses website Smart Canopy. Halaman ini berfungsi sebagai media pengenalan sistem serta menyediakan akses cepat ke fitur utama Smart Canopy.
+
+Tampilan landing page menampilkan identitas sistem berupa logo dan nama Smart Canopy, visualisasi perangkat, serta deskripsi singkat mengenai fitur-fitur pintar yang ditawarkan. Selain itu, tersedia menu navigasi (login) yang menghubungkan pengguna berwenang untuk mengakses halaman operasional dalam sistem.
+
+Fungsi Landing Page:
+- Menampilkan informasi singkat mengenai sistem Smart Canopy.
+- Menjadi halaman awal sebelum pengguna mengakses fitur monitoring dan pengelolaan sistem.
+
+Landing page dirancang dengan tampilan yang modern (glassmorphism), sederhana, dan responsif sehingga dapat diakses dengan baik melalui perangkat desktop maupun mobile.
+
+6.11.2 Implementasi Halaman Login
+
+(Gambar 6.2 Halaman Login)
+
+Halaman login berfungsi sebagai gerbang keamanan utama untuk membatasi akses ke dashboard operasional. Pengguna (Admin) diwajibkan memasukkan kredensial email dan kata sandi yang valid dan telah terdaftar di database Firebase Authentication.
+
+Fungsi Halaman Login:
+- Memverifikasi identitas pengguna sebelum memberikan akses kontrol penuh terhadap sistem perangkat keras (hardware).
+- Mencegah akses dari pihak yang tidak berwenang untuk menghindari manipulasi pergerakan aktuator kanopi secara sembarangan.
+
+6.11.3 Implementasi Halaman Dashboard Utama
+
+(Gambar 6.3 Halaman Dashboard Utama)
+
+Dashboard utama adalah pusat pemantauan visual sistem Smart Canopy. Halaman ini didesain secara interaktif dan menampilkan ringkasan status keseluruhan sistem dari mikrokontroler secara real-time tanpa perlu melakukan pembaruan (refresh) halaman.
+
+Fungsi Halaman Dashboard:
+- Menampilkan status cuaca secara langsung (Sedang Hujan/Cerah) dan angka intensitas cahaya matahari (Lux).
+- Menampilkan indikator status posisi kanopi saat ini (Terbuka/Tertutup) beserta persentase pergerakannya.
+- Menampilkan widget mode operasi yang sedang berjalan pada kontroler (AUTO / MANUAL).
+- Memberikan informasi estimasi suhu di area sekitar kanopi.
+
+6.11.4 Implementasi Halaman Kontrol Manual (Control)
+
+(Gambar 6.4 Halaman Kontrol Kanopi)
+
+Halaman kontrol disediakan bagi pengguna untuk mengambil alih sistem pergerakan kanopi secara manual dari jarak jauh, sehingga memutus sementara intervensi otomatis dari sensor.
+
+Fungsi Halaman Kontrol:
+- Menyediakan tombol "Buka Kanopi" dan "Tutup Kanopi" yang akan langsung mengirimkan perintah (payload) ke mikrokontroler ESP32 melalui Firebase.
+- Menyediakan sakelar (toggle button) penggantian mode dari AUTO ke MANUAL atau sebaliknya.
+- Membantu pengguna memproteksi area di bawah kanopi dalam kondisi/skenario tak terduga yang tidak ter-cover oleh sensor cuaca.
+
+6.11.5 Implementasi Halaman Monitoring Sensor
+
+(Gambar 6.5 Halaman Monitoring Sensor)
+
+Halaman monitoring secara spesifik menampilkan grafik (chart) dan analitik dari pembacaan fluktuasi sensor secara terus-menerus menggunakan komponen Recharts.
+
+Fungsi Halaman Monitoring:
+- Menyajikan visualisasi tren data perubahan intensitas cahaya dan variabel pembacaan hujan dalam bentuk grafik garis (line chart) yang dinamis.
+- Memudahkan pengguna menganalisis pola cuaca dalam hari tersebut berdasarkan pengumpulan data instan.
+
+6.11.6 Implementasi Halaman Data Historis
+
+(Gambar 6.6 Halaman Data Historis)
+
+Halaman data historis berisi tabel rekam jejak (log aktivitas) dan pencatatan riwayat semua aktivitas pada sistem, seperti kapan kanopi otomatis bergerak karena hujan atau kapan perintah manual jarak jauh dikirimkan.
+
+Fungsi Halaman Data Historis:
+- Merekam setiap aksi buka/tutup kanopi beserta keterangan waktu kejadian (timestamp).
+- Merekam pemicu (trigger) perubahan mode kontrol (Auto ke Manual).
+- Menyediakan fitur pelacakan (audit trail) untuk evaluasi dan memastikan sistem hardware merespons sebagaimana mestinya.
+
+6.11.7 Implementasi Bot Telegram
+
+(Gambar 6.7 Antarmuka Bot Telegram Smart Canopy)
+
+Sebagai sistem penunjang, kontrol sistem diimplementasikan juga menggunakan antarmuka Bot Telegram (Node.js webhook via Vercel) untuk kemudahan operasional dari perangkat seluler mana pun.
+
+Fungsi Bot Telegram:
+- Memungkinkan pengguna untuk mengeksekusi instruksi seperti /status, /buka, dan /tutup untuk memonitor dan mengontrol kanopi hanya dengan mengirim pesan teks, tanpa harus membuka web dashboard.
+- Memfasilitasi unduhan rekaman log langsung ke perangkat seluler pengguna.
+
+
+
+6.12. Pengujian
+Pengujian ini mencakup skenario pengujian fungsional (Black Box Testing) dan hasil pengujiannya untuk memastikan seluruh bagian antarmuka dan fungsi perangkat keras sistem dapat berjalan selaras sesuai tujuan perancangan.
+
+6.12.1 Skenario dan Hasil Pengujian Fungsional
+
+Berikut adalah tabel hasil pengujian fungsional interaksi pengguna dengan sistem Smart Canopy:
+
+| No | Skenario Pengujian | Hasil yang Diharapkan | Hasil Pengujian | Kesimpulan |
+|---|---|---|---|---|
+| 1 | Meneteskan air pada sensor hujan fisik saat sistem berada di mode AUTO | Kanopi otomatis bergerak menutup, dan status UI di web dashboard berubah menjadi "TERTUTUP" & "Sedang Hujan" | Sesuai | Valid |
+| 2 | Mengeringkan sensor hujan, namun kondisi sensor cahaya (LDR) ditutup gelap (mode AUTO) | Kanopi tetap tertutup secara otomatis karena mikrokontroler mendeteksi keadaan malam hari/gelap | Sesuai | Valid |
+| 3 | Mengeringkan sensor hujan dalam kondisi cahaya terang (mode AUTO) | Kanopi otomatis bergerak membuka kembali dan status web diperbarui seketika | Sesuai | Valid |
+| 4 | Menekan tombol "Tutup Kanopi" pada web dashboard (Halaman Kontrol) | Sistem mematikan mode AUTO menjadi MANUAL dan motor DC segera bergerak menutup kanopi | Sesuai | Valid |
+| 5 | Mengirim pesan command `/buka` pada Bot Telegram | Sistem webhooks menerima instruksi, mengubah Firebase ke MANUAL, dan kanopi fisik terbuka | Sesuai | Valid |
+| 6 | Membuka paksa alamat URL `/dashboard` tanpa proses login sebelumnya | Sistem Router bereaksi menolak akses dan melempar (redirect) pengguna kembali ke halaman Login | Sesuai | Valid |
+| 7 | Menguji batas fisik pergerakan mekanik kanopi (Limit Switch) | Saat kanopi mencapai titik maksimal terbuka atau tertutup, motor DC langsung diputus alirannya secara otomatis agar tidak rusak | Sesuai | Valid |
+| 8 | Menekan tombol Unduh CSV di Halaman Historis / Telegram | Sistem berhasil mengonversi format JSON Firebase menjadi file .CSV log data yang bisa dianalisis di MS Excel | Sesuai | Valid |
+
+6.12.2 Analisis Hasil Pengujian
+Berdasarkan hasil pengujian fungsional di atas, dapat disimpulkan bahwa keseluruhan perangkat lunak front-end, back-end (Firebase), dan perangkat keras keras telah terintegrasi dengan persentase keberhasilan 100%. Komunikasi dua arah secara Real-time berbasis WebSocket berjalan sinkron. Waktu tunda (delay/latensi) perantara instruksi web hingga dieksekusi pergerakan hardware tercatat berkisar kurang dari 2 detik (tergantung pada stabilitas latensi koneksi internet lokal di area purwarupa).
+
+
+
+7. Penutup
+Bab penutup ini memaparkan kesimpulan yang ditarik dari seluruh kegiatan proyek pembuatan Smart Canopy, serta beberapa saran/rekomendasi agar sistem dapat terus berkembang.
+
+7.1 Kesimpulan
+Berdasarkan serangkaian proses mulai dari tahapan perancangan, pembuatan antarmuka (UI/UX), perangkaian hardware, implementasi kode, hingga fase pengujian, maka ditarik kesimpulan sebagai berikut:
+1. Purwarupa (prototype) sistem atap Smart Canopy berbasis Internet of Things (IoT) telah berhasil dirancang dan dibangun dengan mengintegrasikan hardware utama (Mikrokontroler ESP32, Sensor Hujan, Sensor LDR, Motor DC, Limit Switch) ke dalam satu kesatuan sistem yang dikendalikan oleh platform cloud Firebase Realtime Database.
+2. Sisi rekayasa perangkat lunak telah tuntas dikembangkan menjadi Web Dashboard yang memiliki visual modern responsif (React + Tailwind) serta Bot Telegram otomatis, memberikan kebebasan bagi pengguna untuk melakukan monitoring suhu/cuaca dan mengontrol kanopi secara jarak jauh kapan saja dan di mana saja.
+3. Fungsionalitas automasi terbukti presisi dalam membaca perubahan lingkungan sekitar. Sistem kanopi mampu mengambil keputusan preventif dengan menutup secara mekanis ketika hujan turun atau saat malam tiba, sehingga bisa melindungi secara optimal area atau barang yang berada di bawahnya tanpa kelalaian manusia.
+4. Sistem rekam jejak operasi otomatis (Log Historis) memastikan pengguna dapat melakukan investigasi bila terjadi gangguan, serta meningkatkan transparansi operasional sistem alat.
+
+7.2 Saran
+Dalam rangka upaya pengembangan lebih lanjut serta memaksimalkan kapabilitas implementasi sistem kanopi di masa mendatang, penulis menyarankan beberapa rekomendasi berikut:
+1. Integrasi Sensor Kecepatan Angin (Anemometer): Sangat direkomendasikan untuk menambahkan perlindungan struktural terhadap hembusan angin kencang/badai. Kanopi dapat diprogram agar menutup atau menggulung secara otomatis bila angin melampaui batas wajar sehingga tidak merusak mekanik alat.
+2. Penambahan Sumber Energi Terbarukan (Solar Panel) & Baterai UPS: Mengingat alat bekerja pada lingkungan outdoor yang terpapar matahari secara langsung, alat akan jauh lebih aman (anti-mati lampu saat badai besar) bila dihubungkan ke sumber daya baterai penyimpan listrik tenaga surya.
+3. Kustomisasi Suhu (Sensor DHT22 / Exhaust): Apabila Smart Canopy ini diperuntukkan menaungi wilayah parkir atau greenhouse, penambahan sensor pendeteksi suhu dan kipas otomatis dapat menjaga sirkulasi udara menjadi lebih ramah lingkungan saat kanopi tertutup di hari yang panas.
+4. Peramalan Cuaca Preskriptif (Machine Learning / API Cuaca): Selain mengandalkan sensor pembaca keadaan di tempat secara fisik (reaktif), sistem kedepannya bisa menarik data dari API cuaca internasional (seperti Open-Meteo atau BMKG) agar secara proaktif kanopi ditutup beberapa menit sebelum prediksi badai benar-benar tiba di lokasi.

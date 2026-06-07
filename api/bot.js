@@ -54,7 +54,7 @@ const letakDataRiwayat = async (actionText) => {
       title: actionText,
       type: 'info',
       isRead: false,
-      timestamp: serverTimestamp()
+      timestamp: Date.now()
     });
   } catch(e) {
     console.error("Gagal mencatat log dari Telegram:", e);

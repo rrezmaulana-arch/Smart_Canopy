@@ -1,74 +1,66 @@
 // 📁 src/pages/Control.tsx
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import {
-  Wind, CloudRain, Lock, Unlock,
-  Cpu, Zap, Radio, Settings2, Activity, Sliders, Target,
-  CheckCircle2, XCircle, Sun
+  CloudRain, Lock, Unlock,
+  Cpu, Zap, Radio, Settings2,
+  CheckCircle2, XCircle, Sun, Wifi, User
 } from 'lucide-react';
 
-import { ref, update, push, serverTimestamp } from 'firebase/database';
+import { ref, update, push } from 'firebase/database';
 import { database } from '../services/firebaseConfig';
 import { useFirebaseData } from '../contexts/FirebaseContext';
 import { useAuth } from '../hooks/useAuth';
-import GlassCard from '@/components/ui/GlassCard';
 
-interface DeviceBadgeProps {
-  icon: React.ReactNode;
-  label: string;
-  model: string;
-  active: boolean;
-  isDark: boolean;
-}
-
-const DeviceBadge: React.FC<DeviceBadgeProps> = ({ icon, label, model, active, isDark }) => {
-  const inactiveBg = isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50 border-slate-200/40';
-  const iconColor = active ? 'text-[#EC4899]' : isDark ? 'text-slate-600' : 'text-slate-400';
-  const labelColor = active ? 'text-[#F472B6]' : isDark ? 'text-slate-600' : 'text-slate-400';
-  const modelColor = active ? (isDark ? 'text-white' : 'text-slate-900') : isDark ? 'text-slate-700' : 'text-slate-500';
-
-  return (
-    <div className={`flex items-center gap-4 p-3.5 rounded-2xl border transition-all duration-[800ms] ease-out ${active ? 'bg-pink-500/5 border-pink-500/20 shadow-[0_0_15px_rgba(236,72,153,0.05)] translate-x-0' : `${inactiveBg} opacity-60`
-      }`}>
-      <div className={`transition-colors duration-[800ms] ${iconColor}`}>
-        {React.isValidElement(icon) ? React.cloneElement(icon as any, { size: 16 }) : icon}
-      </div>
-      <div className="text-left">
-        <div className={`text-[9px] font-black uppercase tracking-widest leading-none mb-1.5 transition-colors duration-[800ms] ${labelColor}`}>{label}</div>
-        <div className={`text-[11px] font-bold uppercase italic leading-none transition-colors duration-[800ms] ${modelColor}`}>{model}</div>
-      </div>
+// ─── DeviceBadge ─────────────────────────────────────────────────────────────
+const DeviceBadge = ({ icon, label, model, active, isDark }: any) => (
+  <div className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-700 ${
+    active
+      ? 'bg-pink-500/[0.06] border-pink-500/25 shadow-[0_0_20px_rgba(236,72,153,0.07)]'
+      : isDark ? 'bg-white/[0.02] border-white/5 opacity-40' : 'bg-slate-50 border-slate-100 opacity-40'
+  }`}>
+    <div className={`p-2 rounded-xl transition-colors duration-700 ${active ? 'bg-pink-500/10 text-pink-400' : isDark ? 'bg-white/5 text-slate-600' : 'bg-slate-100 text-slate-400'}`}>
+      {React.isValidElement(icon) ? React.cloneElement(icon as any, { size: 14 }) : icon}
     </div>
-  );
-};
+    <div className="text-left min-w-0">
+      <div className={`text-[9px] font-black uppercase tracking-widest leading-none mb-1 ${active ? 'text-pink-400' : isDark ? 'text-slate-600' : 'text-slate-400'}`}>{label}</div>
+      <div className={`text-[11px] font-bold leading-none truncate ${active ? (isDark ? 'text-white' : 'text-slate-800') : isDark ? 'text-slate-600' : 'text-slate-400'}`}>{model}</div>
+    </div>
+    {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-pink-400 animate-pulse shrink-0" />}
+  </div>
+);
 
+// ─── SensorPill ───────────────────────────────────────────────────────────────
+const SensorPill = ({ icon, label, value, color, isDark }: any) => (
+  <div className={`flex items-center gap-3 p-4 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/5' : 'bg-slate-50/80 border-slate-100'}`}>
+    <div className={`p-2.5 rounded-xl ${color === 'blue' ? 'bg-blue-500/10 text-blue-400' : color === 'amber' ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+      {React.isValidElement(icon) ? React.cloneElement(icon as any, { size: 16 }) : icon}
+    </div>
+    <div className="text-left">
+      <div className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{label}</div>
+      <div className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>{value}</div>
+    </div>
+  </div>
+);
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Control() {
   const context = useOutletContext<{ isDark: boolean }>();
   const isDark = context?.isDark ?? false;
   const { user } = useAuth();
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'Pengguna';
-  const initials = displayName.substring(0, 2).toUpperCase();
+  const initial = displayName.charAt(0).toUpperCase();
 
   const [dbData, setDbData] = useState({
-    intensitas: 0,
-    cahaya: 0,
-    status: 'OPEN',
-    threshold: 65,
-    mode: 'AUTO'
+    intensitas: 0, cahaya: 0, status: 'OPEN', threshold: 65, mode: 'AUTO', position: 100
   });
-
   const [localMode, setLocalMode] = useState('AUTO');
-  const [localThreshold, setLocalThreshold] = useState(65);
-  const [localPosition, setLocalPosition] = useState(100);
+  const [isActing, setIsActing] = useState(false);
 
-  // ✨ PERBAIKAN: Gunakan useRef untuk melacak status drag slider.
-  // Ini mencegah Firebase menimpa nilai slider lokal saat kita sedang menggesernya.
-  const isDraggingRef = useRef(false);
+  const { telemetry, isConnected, isHardwareOnline } = useFirebaseData();
 
-  const { telemetry, isConnected } = useFirebaseData();
-
-  // Sync telemetry ke local state (sama seperti onValue sebelumnya)
   useEffect(() => {
     if (telemetry) {
       setDbData({
@@ -76,291 +68,281 @@ export default function Control() {
         cahaya: telemetry.cahaya,
         status: telemetry.status,
         threshold: telemetry.threshold,
-        mode: telemetry.mode
+        mode: telemetry.mode,
+        position: telemetry.position ?? (telemetry.status === 'CLOSED' ? 0 : 100),
       });
-
-      // Hanya update input lokal jika user tidak sedang menggeser
-      if (!isDraggingRef.current) {
-        setLocalMode(telemetry.mode);
-        setLocalThreshold(telemetry.threshold);
-
-        if (telemetry.position !== undefined) {
-          setLocalPosition(telemetry.position);
-        } else {
-          if (telemetry.status === 'CLOSED') setLocalPosition(0);
-          else if (telemetry.status === 'OPEN') setLocalPosition(100);
-        }
-      }
+      setLocalMode(telemetry.mode);
     }
   }, [telemetry]);
 
   const saveToHistory = (actionLabel: string, changedData: any) => {
-    const historyRef = ref(database, '/Data_Historis');
-    // Struktur history baru - nested per sensor & kanopi
-    const logData = {
+    push(ref(database, '/Data_Historis'), {
       sensors: {
         hujan: { intensitas: dbData.intensitas, isRaining: dbData.intensitas > 0 },
         cahaya: { lux: dbData.cahaya },
       },
-      canopy: { status: dbData.status, position: localPosition },
-      settings: { mode: localMode, threshold: localThreshold },
+      canopy: { status: dbData.status, position: dbData.position },
+      settings: { mode: localMode, threshold: dbData.threshold },
       ...changedData,
       trigger: actionLabel,
-      timestamp: serverTimestamp()
-    };
-    push(historyRef, logData);
+      timestamp: Date.now()
+    });
   };
 
   const toggleMode = () => {
     const newMode = localMode === 'AUTO' ? 'MANUAL' : 'AUTO';
     setLocalMode(newMode);
-    // ✅ Path baru: /settings/mode
     update(ref(database, '/settings'), { mode: newMode })
       .then(() => saveToHistory(`Ubah Mode ke ${newMode}`, { settings: { mode: newMode } }));
   };
 
-  const handleManualAction = (newStatus: 'OPEN' | 'CLOSED') => {
+  const handleManualAction = async (newStatus: 'OPEN' | 'CLOSED') => {
+    if (isActing) return;
+    setIsActing(true);
     const newPos = newStatus === 'OPEN' ? 100 : 0;
-    setLocalPosition(newPos);
     setLocalMode('MANUAL');
-
-    // ✅ Path baru: /canopy/ & /settings/
-    Promise.all([
-      update(ref(database, '/canopy'),   { status: newStatus, position: newPos }),
-      update(ref(database, '/settings'), { mode: 'MANUAL' }),
-    ]).then(() => {
+    try {
+      await Promise.all([
+        update(ref(database, '/canopy'), { status: newStatus, position: newPos }),
+        update(ref(database, '/settings'), { mode: 'MANUAL' }),
+      ]);
       saveToHistory(`Manual Command: ${newStatus}`, {
         canopy: { status: newStatus, position: newPos },
         settings: { mode: 'MANUAL' },
       });
-    });
-  };
-
-  // ✨ PERBAIKAN: onChange HANYA mengubah state lokal untuk animasi UI yang mulus
-  const handlePositionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    isDraggingRef.current = true; // Tandai bahwa user sedang memegang slider
-    const val = Number(e.target.value);
-    setLocalPosition(val);
-  };
-
-  // ✨ PERBAIKAN: onRelease (MouseUp/TouchEnd) baru menembak data ke Firebase
-  const handlePositionRelease = (e: React.MouseEvent | React.TouchEvent) => {
-    const val = Number((e.target as HTMLInputElement).value);
-    const newStatus = val === 0 ? 'CLOSED' : val === 100 ? 'OPEN' : 'PARTIAL';
-
-    setLocalMode('MANUAL');
-
-    // ✅ Path baru: /canopy/ & /settings/
-    Promise.all([
-      update(ref(database, '/canopy'),   { position: val, status: newStatus }),
-      update(ref(database, '/settings'), { mode: 'MANUAL' }),
-    ]).then(() => {
-      saveToHistory(`Manual Slider: ${val}%`, {
-        canopy: { position: val, status: newStatus },
-        settings: { mode: 'MANUAL' },
-      });
-      isDraggingRef.current = false;
-    });
-  };
-
-  const handleThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    isDraggingRef.current = true; // Tandai sedang geser
-    setLocalThreshold(Number(e.target.value));
-  };
-
-  const handleThresholdRelease = () => {
-    // ✅ Path baru: /settings/threshold
-    update(ref(database, '/settings'), { threshold: localThreshold })
-      .then(() => {
-        saveToHistory(`Ubah Threshold (${localThreshold}%)`, { settings: { threshold: localThreshold } });
-        isDraggingRef.current = false;
-      });
+    } finally {
+      setTimeout(() => setIsActing(false), 1200);
+    }
   };
 
   const isManual = localMode === 'MANUAL';
-  const textMain = isDark ? 'text-white' : 'text-slate-900';
-  const textMuted = isDark ? 'text-slate-500' : 'text-slate-400';
-  const sliderTrack = isDark ? 'bg-white/10' : 'bg-slate-200';
+  const isClosed = dbData.status === 'CLOSED';
+  const positionPct = dbData.position ?? (isClosed ? 0 : 100);
 
   return (
-    <div className="max-w-[1400px] mx-auto p-6 md:p-10 space-y-8 animate-in fade-in duration-[800ms] relative">
-      {/* HEADER */}
-      <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
+    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 md:p-10 space-y-6 md:space-y-8 animate-in fade-in duration-700">
+
+      {/* ── HEADER ─────────────────────────────────────────────────────── */}
+      <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg italic border transition-all duration-[800ms] ${isManual ? 'bg-pink-500/20 border-pink-500/40 text-pink-500' : isDark ? 'bg-white/5 border-white/10 text-slate-600' : 'bg-slate-50 border-slate-200 text-slate-400'
-            }`}>{initials.charAt(0)}</div>
-          <div className="text-left">
-            <h1 className={`text-2xl font-black italic uppercase tracking-tight leading-none ${textMain}`}>{displayName}</h1>
-            <span className={`text-[10px] mt-1.5 block font-black uppercase tracking-[0.3em] ${textMuted}`}>Administrator</span>
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl border-2 transition-all duration-700 shadow-lg ${
+            isManual
+              ? 'bg-gradient-to-br from-pink-500 to-rose-500 border-pink-400/30 text-white shadow-pink-500/30'
+              : isDark ? 'bg-white/5 border-white/10 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-500'
+          }`}>{initial}</div>
+          <div>
+            <h1 className={`text-xl sm:text-2xl font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{displayName}</h1>
+            <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Administrator</span>
           </div>
         </div>
-        <div className={`px-5 py-2.5 rounded-full border transition-all duration-[800ms] flex items-center gap-3 ${isManual ? 'bg-pink-500/10 border-pink-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
-          <div className={`w-2 h-2 rounded-full ${isManual ? 'bg-pink-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
-          <span className={`text-[10px] font-black uppercase tracking-widest italic ${isManual ? 'text-pink-500' : 'text-emerald-500'}`}>
-            {isManual ? 'Manual Mode' : 'Auto Mode'}
-          </span>
+
+        <div className="flex items-center gap-3">
+          {/* Connection Badge */}
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
+            isConnected
+              ? isDark ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-600'
+              : isDark ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-red-50 border-red-200 text-red-500'
+          }`}>
+            <Wifi size={12} />
+            {isConnected ? 'Online' : 'Offline'}
+          </div>
+          {/* Mode Badge */}
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-700 ${
+            isManual
+              ? 'bg-pink-500/10 border-pink-500/30 text-pink-400'
+              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+          }`}>
+            <div className={`w-2 h-2 rounded-full animate-pulse ${isManual ? 'bg-pink-400' : 'bg-emerald-400'}`} />
+            <span className="text-[10px] font-black uppercase tracking-widest">{isManual ? 'Manual' : 'Auto'}</span>
+          </div>
         </div>
       </div>
 
-      {/* Central Control Hub */}
-      <GlassCard isDark={isDark} className={`rounded-[3rem] p-8 md:p-14 relative overflow-hidden transition-all duration-1000`}>
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* ── MAIN GRID ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-8 items-start">
 
-          <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
-            <div className="text-left border-l-[3px] border-[#EC4899] pl-4 mb-8">
-              <div className="text-[10px] font-black text-[#EC4899] uppercase tracking-[0.4em] mb-1.5">Module</div>
-              <div className={`text-sm font-bold uppercase italic ${textMain}`}>IoT Architecture</div>
-            </div>
-            <div className="grid grid-cols-1 gap-3.5">
-              <DeviceBadge icon={<Cpu />} label="Processor" model="ESP-32 WROOM" active={true} isDark={isDark} />
-              <DeviceBadge icon={<Zap />} label="Actuator" model="Servo Motor" active={isManual} isDark={isDark} />
-              <DeviceBadge icon={<Radio />} label="Network" model="Firebase DB" active={true} isDark={isDark} />
-              <DeviceBadge icon={<Settings2 />} label="Mode" model={localMode === 'AUTO' ? 'Auto' : 'Manual'} active={isManual} isDark={isDark} />
+        {/* LEFT — IoT Modules */}
+        <div className="lg:col-span-3 space-y-3 order-3 lg:order-1">
+          <div className={`text-[10px] font-black uppercase tracking-[0.3em] mb-4 pl-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>IoT Architecture</div>
+          <DeviceBadge icon={<Cpu />} label="Processor" model="ESP-32 WROOM" active={isHardwareOnline} isDark={isDark} />
+          <DeviceBadge icon={<Zap />} label="Actuator" model="Servo Motor" active={isManual} isDark={isDark} />
+          <DeviceBadge icon={<Radio />} label="Network" model="Firebase RTDB" active={isConnected} isDark={isDark} />
+          <DeviceBadge icon={<Settings2 />} label="Mode Kendali" model={isManual ? 'Manual Override' : 'Smart Auto'} active={true} isDark={isDark} />
+          <DeviceBadge icon={<User />} label="Operator" model={displayName} active={isManual} isDark={isDark} />
+        </div>
+
+        {/* CENTER — Canopy Visualizer */}
+        <div className="lg:col-span-6 order-1 lg:order-2 flex flex-col items-center gap-8">
+
+          {/* Status ring + canopy visual */}
+          <div className="relative flex flex-col items-center">
+            {/* Outer glow ring */}
+            <div className={`absolute inset-0 rounded-full blur-[60px] transition-all duration-1000 ${
+              isClosed ? 'bg-rose-500/20' : 'bg-emerald-500/20'
+            }`} style={{ top: '10%', left: '10%', right: '10%', bottom: '10%' }} />
+
+            {/* Status label */}
+            <div className={`text-[11px] font-black uppercase tracking-[0.8em] mb-4 transition-colors duration-700 ${
+              isManual ? 'text-pink-400' : 'text-emerald-400'
+            }`}>Current Status</div>
+
+            {/* Big status text */}
+            <h2 className={`text-6xl sm:text-7xl md:text-8xl font-black italic tracking-tighter uppercase leading-none transition-all duration-700 mb-2 ${
+              isClosed
+                ? isDark ? 'text-rose-400 drop-shadow-[0_0_30px_rgba(244,63,94,0.4)]' : 'text-rose-500'
+                : isDark ? 'text-emerald-400 drop-shadow-[0_0_30px_rgba(16,185,129,0.4)]' : 'text-emerald-600'
+            }`}>
+              {isClosed ? 'CLOSE' : 'OPEN'}
+            </h2>
+
+            {/* Position bar */}
+            <div className="w-full max-w-xs mt-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Posisi Motor</span>
+                <span className={`text-xs font-black tabular-nums ${isClosed ? 'text-rose-400' : 'text-emerald-400'}`}>{positionPct}%</span>
+              </div>
+              <div className={`w-full h-3 rounded-full overflow-hidden ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+                <div
+                  className={`h-full rounded-full transition-all duration-[1500ms] ease-in-out ${
+                    isClosed
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-500 shadow-[0_0_12px_rgba(244,63,94,0.6)]'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.6)]'
+                  }`}
+                  style={{ width: `${positionPct}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                <span>Tertutup (0%)</span>
+                <span>Terbuka (100%)</span>
+              </div>
             </div>
           </div>
 
-          <div className="lg:col-span-6 flex flex-col items-center order-1 lg:order-2">
-            <div className="mb-14 text-center">
-              <div className={`text-[11px] font-black uppercase tracking-[0.8em] mb-4 ${isManual ? 'text-[#EC4899]' : 'text-emerald-500'}`}>Current Status</div>
-              <h2 className={`text-7xl md:text-[6.5rem] font-black italic tracking-tighter uppercase leading-none transition-all duration-700 ${isDark ? 'text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]' : 'text-slate-900 drop-shadow-[0_0_20px_rgba(236,72,153,0.15)]'}`}>
-                {dbData.status === 'CLOSED' ? 'CLOSE' : dbData.status === 'OPEN' ? 'OPEN' : dbData.status}
-              </h2>
-            </div>
-
-            <div className={`relative p-5 rounded-full border transition-all duration-[800ms] ${isManual ? 'bg-[#EC4899]/5 border-[#EC4899]/30 shadow-[0_0_40px_rgba(236,72,153,0.15)]' : 'bg-transparent border-transparent'}`}>
-              <div className={`w-[260px] md:w-[300px] h-[90px] md:h-[100px] rounded-full border-[6px] relative flex items-center ${isDark ? 'bg-[#05070a] border-[#1a1f26]' : 'bg-slate-100 border-white shadow-inner'}`}>
-                <button
-                  onClick={toggleMode}
-                  className={`absolute z-20 w-[68px] h-[68px] md:w-[76px] md:h-[76px] rounded-full flex items-center justify-center border-4 transition-all duration-[600ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isManual
-                    ? 'left-[calc(100%-68px-10px)] md:left-[calc(100%-76px-10px)] bg-gradient-to-tr from-[#EC4899] to-[#F43F5E] border-white/30 shadow-[0_0_40px_rgba(236,72,153,0.7)]'
-                    : `left-[10px] ${isDark ? 'bg-emerald-600 border-white/20' : 'bg-emerald-500 border-emerald-200'}`
-                    }`}
-                >
-                  {isManual ? <Lock size={28} className="text-white" /> : <Unlock size={28} className="text-white" />}
-                </button>
-                <span className={`absolute w-full text-center text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${isManual ? 'text-pink-500/50 pr-8' : 'text-emerald-500/50 pl-8'}`}>
-                  {isManual ? 'Manual' : 'Auto'}
-                </span>
+          {/* AUTO / MANUAL toggle */}
+          <div className="flex flex-col items-center gap-3">
+            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Mode Sistem</span>
+            <button
+              onClick={toggleMode}
+              className={`relative w-[220px] h-[68px] rounded-full border-4 flex items-center transition-all duration-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${
+                isManual
+                  ? isDark ? 'bg-pink-500/10 border-pink-500/40 shadow-[0_0_30px_rgba(236,72,153,0.25)]' : 'bg-pink-50 border-pink-300'
+                  : isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'
+              }`}
+            >
+              {/* Sliding knob */}
+              <div className={`absolute w-14 h-14 rounded-full flex items-center justify-center border-2 shadow-xl transition-all duration-[600ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                isManual
+                  ? 'left-[calc(100%-60px)] bg-gradient-to-tr from-pink-500 to-rose-400 border-pink-300/30 shadow-pink-500/50'
+                  : `left-[4px] border-white/20 ${isDark ? 'bg-emerald-500 shadow-emerald-500/40' : 'bg-emerald-400 shadow-emerald-400/40'}`
+              }`}>
+                {isManual ? <Lock size={22} className="text-white" /> : <Unlock size={22} className="text-white" />}
               </div>
-            </div>
+              <span className={`absolute w-full text-center text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${
+                isManual ? 'text-pink-400/60 pr-10' : 'text-emerald-500/60 pl-10'
+              }`}>
+                {isManual ? 'Manual' : 'Otomatis'}
+              </span>
+            </button>
+            <p className={`text-[10px] text-center ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+              {isManual ? 'Kontrol manual aktif — panel kendali siap digunakan' : 'Sistem berjalan otomatis berdasarkan sensor'}
+            </p>
           </div>
+        </div>
 
-          <div className={`lg:col-span-3 space-y-8 order-3`}>
-            <div className="text-right border-r-[3px] border-[#3B82F6] pr-4 mb-8">
-              <div className="text-[10px] font-black text-[#3B82F6] uppercase tracking-[0.3em] mb-1.5">Data Langsung</div>
-              <div className={`text-sm font-bold uppercase italic ${textMain}`}>Info Cuaca</div>
-            </div>
-            <div className="space-y-7">
-              <div className="text-right">
-                <div className={`text-[10px] font-black uppercase mb-2 flex items-center justify-end gap-2 ${textMuted}`}><Wind size={14} /> Kec. Angin</div>
-                <div className={`text-4xl font-black italic leading-none ${textMuted}`}>12.4 <span className="text-[12px] not-italic ml-1">km/h</span></div>
+        {/* RIGHT — Sensor Data */}
+        <div className="lg:col-span-3 space-y-3 order-2 lg:order-3">
+          <div className={`text-[10px] font-black uppercase tracking-[0.3em] mb-4 pl-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Data Sensor Langsung</div>
+          <SensorPill icon={<CloudRain />} label="Status Hujan" value={dbData.intensitas > 0 ? '🌧 Hujan' : '☀️ Cerah'} color="blue" isDark={isDark} />
+          <SensorPill icon={<Sun />} label="Intensitas Cahaya" value={`${dbData.cahaya} Lux`} color="amber" isDark={isDark} />
+          <SensorPill icon={<Zap />} label="Status Kanopi" value={isClosed ? '🔴 Tertutup' : '🟢 Terbuka'} color="emerald" isDark={isDark} />
+
+          {/* Threshold display-only */}
+          <div className={`p-4 rounded-2xl border mt-2 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50 border-slate-100'}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Batas Hujan Auto</div>
+            <div className="flex items-center gap-3">
+              <div className={`flex-1 h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/5' : 'bg-slate-200'}`}>
+                <div className="h-full bg-gradient-to-r from-pink-500 to-violet-500 transition-all duration-500" style={{ width: `${dbData.threshold}%` }} />
               </div>
-              <div className="text-right">
-                <div className={`text-[10px] font-black uppercase mb-2 flex items-center justify-end gap-2 text-[#10B981]`}><CloudRain size={14} /> Status Hujan</div>
-                <div className={`text-4xl font-black italic leading-none ${textMain}`}>{dbData.intensitas > 0 ? 'Hujan' : 'Cerah'}</div>
-              </div>
-              <div className="text-right">
-                <div className={`text-[10px] font-black uppercase mb-2 flex items-center justify-end gap-2 text-amber-500`}><Sun size={14} /> Int. Cahaya</div>
-                <div className={`text-4xl font-black italic leading-none ${textMain}`}>{dbData.cahaya} <span className="text-[12px] text-slate-400 not-italic ml-1">Lux</span></div>
-              </div>
-              <div className={`pt-7 border-t ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
-                <div className="flex flex-col items-end gap-3">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#EC4899]">Posisi Motor</span>
-                  <div className={`w-full h-2 rounded-full overflow-hidden border ${isDark ? 'bg-black border-white/5' : 'bg-slate-100 border-slate-200'}`}>
-                    <div className={`h-full transition-all duration-[1200ms] bg-[#EC4899] shadow-[0_0_10px_rgba(236,72,153,0.5)]`} style={{ width: `${localPosition}%` }} />
-                  </div>
-                </div>
-              </div>
+              <span className={`text-sm font-black tabular-nums ${isDark ? 'text-white' : 'text-slate-800'}`}>{dbData.threshold}%</span>
             </div>
           </div>
         </div>
-      </GlassCard>
+      </div>
 
-      {/* Manual Control Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <GlassCard isDark={isDark} className={`rounded-[2.5rem] p-8 space-y-6 transition-all duration-500 ${!isManual ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
-          <div className="flex items-center gap-3 border-b pb-4 border-slate-500/10">
-            <Sliders size={20} className="text-pink-500" />
-            <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textMain}`}>Kendali Manual</h3>
+      {/* ── MANUAL CONTROL PANEL ───────────────────────────────────────── */}
+      <div className={`relative rounded-[2rem] md:rounded-[2.5rem] border overflow-hidden transition-all duration-700 ${
+        !isManual ? 'opacity-30 grayscale pointer-events-none' : 'opacity-100'
+      } ${isDark ? 'bg-[#03060C]/60 backdrop-blur-[40px] border-white/5' : 'bg-white/90 backdrop-blur-[40px] border-slate-200/50 shadow-xl'}`}>
+
+        {/* Top accent line */}
+        <div className={`absolute top-0 left-0 right-0 h-[2px] transition-colors duration-700 ${isManual ? 'bg-gradient-to-r from-pink-500 to-violet-500' : 'bg-transparent'}`} />
+
+        <div className="p-6 md:p-10">
+          <div className="flex items-center gap-3 mb-8">
+            <div className={`p-2.5 rounded-xl ${isDark ? 'bg-pink-500/10 text-pink-400' : 'bg-pink-50 text-pink-500'}`}>
+              <Settings2 size={18} />
+            </div>
+            <div>
+              <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${isDark ? 'text-white' : 'text-slate-900'}`}>Kendali Manual Kanopi</h3>
+              <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                {isManual ? 'Pilih aksi di bawah untuk mengirim perintah ke ESP32' : 'Aktifkan mode manual untuk menggunakan panel ini'}
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+
+            {/* CLOSE button */}
             <button
               onClick={() => handleManualAction('CLOSED')}
-              className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all duration-300 gap-3 ${dbData.status === 'CLOSED'
-                ? 'bg-pink-500/10 border-pink-500 text-pink-500 shadow-lg'
-                : `border-slate-500/10 ${isDark ? 'bg-white/5 text-slate-500' : 'bg-slate-50 text-slate-400'} hover:border-pink-500/30`
-                }`}
+              disabled={isActing}
+              className={`group relative flex flex-col items-center justify-center p-8 md:p-10 rounded-3xl border-2 transition-all duration-500 gap-4 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${
+                isClosed
+                  ? 'bg-rose-500/10 border-rose-500 text-rose-400 shadow-[0_0_30px_rgba(244,63,94,0.2)]'
+                  : `border-slate-500/10 ${isDark ? 'bg-white/[0.02] text-slate-500' : 'bg-slate-50 text-slate-400'} hover:border-rose-500/40 hover:bg-rose-500/5 hover:text-rose-400`
+              } disabled:cursor-wait`}
             >
-              <XCircle size={32} strokeWidth={1.5} />
-              <span className="text-[11px] font-black uppercase tracking-widest">Tutup Kanopi</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-rose-500/0 to-rose-500/0 group-hover:from-rose-500/5 group-hover:to-rose-500/10 transition-all duration-500 rounded-3xl" />
+              {isActing && isClosed ? (
+                <div className="w-10 h-10 rounded-full border-2 border-rose-400 border-t-transparent animate-spin" />
+              ) : (
+                <XCircle size={40} strokeWidth={1.5} className="group-hover:scale-110 transition-transform duration-300" />
+              )}
+              <div className="text-center">
+                <div className="text-[13px] font-black uppercase tracking-[0.2em]">Tutup Kanopi</div>
+                <div className="text-[10px] mt-1 opacity-60 font-medium">Posisi → 0% (Tertutup)</div>
+              </div>
+              {isClosed && (
+                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+              )}
             </button>
 
+            {/* OPEN button */}
             <button
               onClick={() => handleManualAction('OPEN')}
-              className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all duration-300 gap-3 ${dbData.status === 'OPEN'
-                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500 shadow-lg'
-                : `border-slate-500/10 ${isDark ? 'bg-white/5 text-slate-500' : 'bg-slate-50 text-slate-400'} hover:border-emerald-500/30`
-                }`}
+              disabled={isActing}
+              className={`group relative flex flex-col items-center justify-center p-8 md:p-10 rounded-3xl border-2 transition-all duration-500 gap-4 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                !isClosed
+                  ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
+                  : `border-slate-500/10 ${isDark ? 'bg-white/[0.02] text-slate-500' : 'bg-slate-50 text-slate-400'} hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:text-emerald-400`
+              } disabled:cursor-wait`}
             >
-              <CheckCircle2 size={32} strokeWidth={1.5} />
-              <span className="text-[11px] font-black uppercase tracking-widest">Buka Kanopi</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/5 group-hover:to-emerald-500/10 transition-all duration-500 rounded-3xl" />
+              {isActing && !isClosed ? (
+                <div className="w-10 h-10 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
+              ) : (
+                <CheckCircle2 size={40} strokeWidth={1.5} className="group-hover:scale-110 transition-transform duration-300" />
+              )}
+              <div className="text-center">
+                <div className="text-[13px] font-black uppercase tracking-[0.2em]">Buka Kanopi</div>
+                <div className="text-[10px] mt-1 opacity-60 font-medium">Posisi → 100% (Terbuka)</div>
+              </div>
+              {!isClosed && (
+                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              )}
             </button>
           </div>
-
-          <div className="pt-6 mt-6 border-t border-slate-500/10">
-            <div className="flex justify-between items-center mb-4">
-              <span className={`text-[10px] font-black uppercase tracking-widest ${textMuted}`}>Atur Posisi</span>
-              <span className={`text-sm font-black tabular-nums ${isDark ? 'text-pink-400' : 'text-pink-500'}`}>{localPosition}%</span>
-            </div>
-            <input
-              type="range" min="0" max="100"
-              value={localPosition}
-              onChange={handlePositionChange}
-              onMouseUp={handlePositionRelease}
-              onTouchEnd={handlePositionRelease}
-              className={`w-full h-2 rounded-lg appearance-none cursor-pointer accent-pink-500 ${sliderTrack}`}
-            />
-            <div className="flex justify-between mt-2 text-[9px] font-black text-slate-500 uppercase tracking-tighter">
-              <span>0% (Tertutup)</span>
-              <span>100% (Terbuka)</span>
-            </div>
-          </div>
-
-          <p className={`text-[10px] text-center italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-            Tekan tombol untuk buka/tutup instan, atau geser slider untuk posisi tertentu.
-          </p>
-        </GlassCard>
-
-        <GlassCard isDark={isDark} className={`rounded-[2.5rem] p-8 space-y-6 transition-all duration-500 ${!isManual ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
-          <div className="flex justify-between items-center border-b pb-4 border-slate-500/10">
-            <div className="flex items-center gap-3">
-              <Sun size={20} className="text-emerald-500" />
-              <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textMain}`}>Sensitivitas Cahaya</h3>
-            </div>
-            <span className={`text-2xl font-black tabular-nums ${textMain}`}>{localThreshold}%</span>
-          </div>
-
-          <input
-            type="range" min="0" max="100"
-            value={localThreshold}
-            onChange={handleThresholdChange}
-            onMouseUp={handleThresholdRelease}
-            onTouchEnd={handleThresholdRelease}
-            disabled={!isManual}
-            className={`w-full h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500 ${sliderTrack} disabled:cursor-not-allowed`}
-          />
-          <div className="flex justify-between mt-2 text-[9px] font-black text-slate-500 uppercase tracking-tighter">
-            <span>Gelap (0%)</span>
-            <span>Terang (100%)</span>
-          </div>
-          {!isManual && (
-            <p className={`text-[10px] text-center italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              Alihkan ke Mode Manual untuk mengubah sensitivitas.
-            </p>
-          )}
-        </GlassCard>
-
+        </div>
       </div>
     </div>
   );

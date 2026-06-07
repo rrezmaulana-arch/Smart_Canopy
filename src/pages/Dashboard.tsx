@@ -164,21 +164,26 @@ export default function Dashboard() {
 
 
   // ✨ LOGIKA ARRAY UNTUK GRAFIK (Ambil 1 hari / 24 data & simpan agar tidak kosong saat dibuka)
-  const [chartData, setChartData] = useState<{rain: number, light: number}[]>(() => {
-    const savedData = localStorage.getItem('canopy_chart_history_v2');
-    if (savedData) {
-      return JSON.parse(savedData);
-    }
-    return Array(24).fill({ rain: 0, light: 0 }); 
-  });
+  const [chartData, setChartData] = useState<{rain: number, light: number}[]>(Array(24).fill({ rain: 0, light: 0 }));
 
   useEffect(() => {
-    setChartData(prevData => {
-      const newData = [...prevData.slice(1), { rain: intensitas, light: cahaya }];
-      localStorage.setItem('canopy_chart_history_v2', JSON.stringify(newData));
-      return newData;
-    });
-  }, [intensitas, cahaya]);
+    if (!historyLogs || historyLogs.length === 0) {
+      setChartData(Array(24).fill({ rain: 0, light: 0 }));
+      return;
+    }
+    const sorted = [...historyLogs].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    const last24 = sorted.slice(-24);
+    const mapped = last24.map(log => ({
+      rain: log.intensitas || 0,
+      light: log.cahaya || 0
+    }));
+
+    if (mapped.length < 24) {
+      setChartData([...Array(24 - mapped.length).fill({ rain: 0, light: 0 }), ...mapped]);
+    } else {
+      setChartData(mapped);
+    }
+  }, [historyLogs]);
 
   const maxChartVal = Math.max(100, ...(chartData?.map(d => Math.max(d.rain, d.light)) || [0]));
 
@@ -453,29 +458,38 @@ export default function Dashboard() {
           <div className={`p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] flex-1 transition-all duration-500 flex flex-col justify-center border ${isDark ? 'bg-gradient-to-br from-[#EC4899]/[0.04] to-transparent border-white/5'
             : 'bg-white border-slate-100 shadow-xl shadow-slate-200/50'
             }`}>
-            <div className="flex items-center justify-between mb-4 md:mb-6">
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className={`p-2 rounded-xl ${isDark ? 'bg-pink-500/10 text-pink-500' : 'bg-pink-50 text-pink-600'}`}>
-                  <Sliders size={16} className="md:w-[18px] md:h-[18px]" />
-                </div>
-                <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Batas Otomatis
-                </span>
+            <div className="flex items-center gap-2 md:gap-3 mb-5 md:mb-6">
+              <div className={`p-2 rounded-xl ${status === 'CLOSED' ? (isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-50 text-rose-500') : (isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600')}`}>
+                <Home size={16} className="md:w-[18px] md:h-[18px]" />
               </div>
-              <span className={`text-2xl md:text-3xl font-black tabular-nums transition-colors ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                {threshold}<span className="text-pink-500 text-lg md:text-xl ml-0.5">%</span>
+              <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Posisi Kanopi
               </span>
             </div>
 
-            <div className={`w-full h-1.5 rounded-full mb-4 md:mb-6 overflow-hidden ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+            {/* Big status label */}
+            <div className={`text-3xl md:text-4xl font-black uppercase tracking-tight mb-4 transition-colors duration-700 ${
+              status === 'CLOSED'
+                ? isDark ? 'text-rose-400' : 'text-rose-500'
+                : isDark ? 'text-emerald-400' : 'text-emerald-600'
+            }`}>
+              {status === 'CLOSED' ? 'Tertutup' : 'Terbuka'}
+            </div>
+
+            {/* Position progress */}
+            <div className={`w-full h-2 rounded-full overflow-hidden mb-3 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
               <div
-                className="h-full bg-gradient-to-r from-[#EC4899] to-[#8B5CF6] opacity-70 transition-all duration-300"
-                style={{ width: `${threshold}%` }}
+                className={`h-full rounded-full transition-all duration-[1200ms] ${
+                  status === 'CLOSED'
+                    ? 'bg-gradient-to-r from-rose-500 to-pink-500'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                }`}
+                style={{ width: status === 'CLOSED' ? '5%' : '100%' }}
               />
             </div>
 
             <p className={`text-[10px] md:text-[11px] font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Sistem tertutup otomatis jika hujan di atas <span className={isDark ? "text-pink-400 font-bold" : "text-pink-600 font-bold"}>{threshold}%</span>.
+              Posisi motor: <span className={`font-bold ${status === 'CLOSED' ? (isDark ? 'text-rose-400' : 'text-rose-500') : (isDark ? 'text-emerald-400' : 'text-emerald-600')}`}>{status === 'CLOSED' ? '0%' : '100%'}</span> — {mode === 'AUTO' ? 'Diatur otomatis oleh sensor' : 'Kontrol manual aktif'}.
             </p>
           </div>
         </div>
