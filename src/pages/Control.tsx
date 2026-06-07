@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 
 import { ref, update, push } from 'firebase/database';
+import { database } from '../services/firebaseConfig';
+import { useFirebaseData } from '../contexts/FirebaseContext';
 import { useAuth } from '../hooks/useAuth';
 import GlassCard from '@/components/ui/GlassCard';
 
