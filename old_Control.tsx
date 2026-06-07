@@ -1,4 +1,4 @@
-// ­ƒôü src/pages/Control.tsx
+﻿// ­ƒôü src/pages/Control.tsx
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -9,7 +9,9 @@ import {
   CheckCircle2, XCircle, Sun
 } from 'lucide-react';
 
-import { ref, update, push } from 'firebase/database';
+import { ref, update, push, serverTimestamp } from 'firebase/database';
+import { database } from '../services/firebaseConfig';
+import { useFirebaseData } from '../contexts/FirebaseContext';
 import { useAuth } from '../hooks/useAuth';
 import GlassCard from '@/components/ui/GlassCard';
 
@@ -104,7 +106,7 @@ export default function Control() {
       settings: { mode: localMode, threshold: localThreshold },
       ...changedData,
       trigger: actionLabel,
-      timestamp: Date.now()
+      timestamp: serverTimestamp()
     };
     push(historyRef, logData);
   };
@@ -275,41 +277,90 @@ export default function Control() {
       </GlassCard>
 
       {/* Manual Control Panel */}
-      <div className="max-w-2xl mx-auto pb-10">
-        <GlassCard isDark={isDark} className={`rounded-[2.5rem] p-8 md:p-10 space-y-8 transition-all duration-500 ${!isManual ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
-          <div className="flex items-center justify-center gap-3 border-b pb-6 border-slate-500/10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <GlassCard isDark={isDark} className={`rounded-[2.5rem] p-8 space-y-6 transition-all duration-500 ${!isManual ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+          <div className="flex items-center gap-3 border-b pb-4 border-slate-500/10">
             <Sliders size={20} className="text-pink-500" />
-            <h3 className={`text-base font-black uppercase tracking-[0.2em] ${textMain}`}>Kendali Manual</h3>
+            <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textMain}`}>Kendali Manual</h3>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => handleManualAction('CLOSED')}
-              className={`flex flex-col items-center justify-center p-8 rounded-3xl border-2 transition-all duration-300 gap-4 ${dbData.status === 'CLOSED'
+              className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all duration-300 gap-3 ${dbData.status === 'CLOSED'
                 ? 'bg-pink-500/10 border-pink-500 text-pink-500 shadow-lg'
                 : `border-slate-500/10 ${isDark ? 'bg-white/5 text-slate-500' : 'bg-slate-50 text-slate-400'} hover:border-pink-500/30`
                 }`}
             >
-              <XCircle size={36} strokeWidth={1.5} />
-              <span className="text-[12px] font-black uppercase tracking-widest">Tutup Kanopi</span>
+              <XCircle size={32} strokeWidth={1.5} />
+              <span className="text-[11px] font-black uppercase tracking-widest">Tutup Kanopi</span>
             </button>
 
             <button
               onClick={() => handleManualAction('OPEN')}
-              className={`flex flex-col items-center justify-center p-8 rounded-3xl border-2 transition-all duration-300 gap-4 ${dbData.status === 'OPEN'
+              className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all duration-300 gap-3 ${dbData.status === 'OPEN'
                 ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500 shadow-lg'
                 : `border-slate-500/10 ${isDark ? 'bg-white/5 text-slate-500' : 'bg-slate-50 text-slate-400'} hover:border-emerald-500/30`
                 }`}
             >
-              <CheckCircle2 size={36} strokeWidth={1.5} />
-              <span className="text-[12px] font-black uppercase tracking-widest">Buka Kanopi</span>
+              <CheckCircle2 size={32} strokeWidth={1.5} />
+              <span className="text-[11px] font-black uppercase tracking-widest">Buka Kanopi</span>
             </button>
           </div>
 
-          <p className={`text-[11px] text-center italic mt-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-            Tekan tombol untuk buka atau tutup instan. Pastikan Mode Manual menyala.
+          <div className="pt-6 mt-6 border-t border-slate-500/10">
+            <div className="flex justify-between items-center mb-4">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${textMuted}`}>Atur Posisi</span>
+              <span className={`text-sm font-black tabular-nums ${isDark ? 'text-pink-400' : 'text-pink-500'}`}>{localPosition}%</span>
+            </div>
+            <input
+              type="range" min="0" max="100"
+              value={localPosition}
+              onChange={handlePositionChange}
+              onMouseUp={handlePositionRelease}
+              onTouchEnd={handlePositionRelease}
+              className={`w-full h-2 rounded-lg appearance-none cursor-pointer accent-pink-500 ${sliderTrack}`}
+            />
+            <div className="flex justify-between mt-2 text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+              <span>0% (Tertutup)</span>
+              <span>100% (Terbuka)</span>
+            </div>
+          </div>
+
+          <p className={`text-[10px] text-center italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+            Tekan tombol untuk buka/tutup instan, atau geser slider untuk posisi tertentu.
           </p>
         </GlassCard>
+
+        <GlassCard isDark={isDark} className={`rounded-[2.5rem] p-8 space-y-6 transition-all duration-500 ${!isManual ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+          <div className="flex justify-between items-center border-b pb-4 border-slate-500/10">
+            <div className="flex items-center gap-3">
+              <Sun size={20} className="text-emerald-500" />
+              <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${textMain}`}>Sensitivitas Cahaya</h3>
+            </div>
+            <span className={`text-2xl font-black tabular-nums ${textMain}`}>{localThreshold}%</span>
+          </div>
+
+          <input
+            type="range" min="0" max="100"
+            value={localThreshold}
+            onChange={handleThresholdChange}
+            onMouseUp={handleThresholdRelease}
+            onTouchEnd={handleThresholdRelease}
+            disabled={!isManual}
+            className={`w-full h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500 ${sliderTrack} disabled:cursor-not-allowed`}
+          />
+          <div className="flex justify-between mt-2 text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+            <span>Gelap (0%)</span>
+            <span>Terang (100%)</span>
+          </div>
+          {!isManual && (
+            <p className={`text-[10px] text-center italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              Alihkan ke Mode Manual untuk mengubah sensitivitas.
+            </p>
+          )}
+        </GlassCard>
+
       </div>
     </div>
   );
